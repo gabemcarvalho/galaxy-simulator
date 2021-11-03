@@ -49,7 +49,8 @@ def main():
             filename = xyz_directory + '{:04d}'.format(i) + '.xyz'
             with open(filename, 'w') as f:
                 for j in range(int(data.shape[1] / 3)):
-                    f.write(str(data[i,3*j]) + "," + str(data[i,3*j+1]) + "," + str(data[i,3*j+2]) + '\n')
+                    # write x,y,z as x,z,y (since y is up in TouchDesigner)
+                    f.write(str(data[i,3*j]) + "," + str(data[i,3*j+2]) + "," + str(data[i,3*j+1]) + '\n')
                     
             
 

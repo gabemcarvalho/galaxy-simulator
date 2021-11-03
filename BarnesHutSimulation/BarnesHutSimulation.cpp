@@ -48,7 +48,7 @@ void GenerateDistributionUniformSphere(Particle3D** aParticles, int iNumParticle
     {
         POS_TYPE fR = std::sqrt(frand());
         POS_TYPE fTheta = frand() * 2.0f * PI;
-        POS_TYPE fPhi = frand() * PI;
+        POS_TYPE fPhi = std::acos(1.0f - 2.0f * frand());// frand()* PI;
         Vector3 vPos(fRadius * fR * std::cos(fTheta) * std::sin(fPhi), fRadius * fR * std::sin(fTheta) * std::sin(fPhi), fRadius * fR * std::cos(fPhi));
 
         fR = fEdgeSpeed * fR;
