@@ -142,9 +142,11 @@
     <ClCompile Include="BarnesHutSimulation.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Distributions.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="Particle.h" />
+    <ClInclude Include="LinkedList.h" />
     <ClInclude Include="Quadtree.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vector3.h" />

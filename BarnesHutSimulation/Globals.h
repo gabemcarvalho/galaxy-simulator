@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 
-const int g_iNumParticles = 2048;
+const int g_iNumParticles = 512;
 const float g_fSimulationRadius = 10.0f;
 const float g_fCloudRadius = 3.0f;
 const float g_fCloudMass = 1.0f;
@@ -14,6 +14,7 @@ const float g_fGravitationConst = 15.0f;
 const float g_fMaxStartSpeed = 2.0;// 3.5f;
 const float g_fGravSofteningDist = 0.05f * g_fCloudRadius;
 const float g_fThetaSquared = 0.4f * 0.4f; // node taken as point mass if width/distance < theta
+const float g_fInitialH = 0.2f;
 
 const int g_iSeed = 1;
 const float FLOAT_RAND_MAX = static_cast<float>(RAND_MAX);

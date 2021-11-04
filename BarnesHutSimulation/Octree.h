@@ -2,6 +2,7 @@
 #include "Globals.h"
 #include "Vector2.h"
 #include "Particle.h"
+#include "LinkedList.h"
 
 struct OctreeNode
 {
@@ -54,9 +55,13 @@ struct OctreeNode
     void AddNodeForParticle(int iNodeIndex, Particle3D* particle)
     {
         OctreeNode* pNewNode = new OctreeNode(particle);
-        pNewNode->vPosition[0] = vPosition[0] + fWidth * (0.25f - 0.5f * (iNodeIndex & 1));
-        pNewNode->vPosition[1] = vPosition[1] + fWidth * (0.25f - 0.5f * (iNodeIndex & 2));
-        pNewNode->vPosition[2] = vPosition[2] + fWidth * (0.25f - 0.5f * (iNodeIndex & 4));
+        bool bX = iNodeIndex & 1;
+        bool bY = iNodeIndex & 2;
+        bool bZ = iNodeIndex & 4;
+        
+        pNewNode->vPosition[0] = vPosition[0] + fWidth * (0.25f - 0.5f * bX);
+        pNewNode->vPosition[1] = vPosition[1] + fWidth * (0.25f - 0.5f * bY);
+        pNewNode->vPosition[2] = vPosition[2] + fWidth * (0.25f - 0.5f * bZ);
         pNewNode->fWidth = fWidth / 2.0f;
         pNodes[iNodeIndex] = pNewNode;
     }
@@ -122,5 +127,36 @@ struct OctreeNode
         }
 
         return vGrav;
+    }
+
+    void FindNeighbours(List<Particle3D>* pList, Particle3D* particle, POS_TYPE fSearchRadius)
+    {
+        // if the node volume does not intersect a cube around the particle, stop traversing down this path
+        POS_TYPE fMaxDist = fSearchRadius + fWidth;
+        if (std::abs(particle->position[0] - vPosition[0]) > fMaxDist ||
+            std::abs(particle->position[0] - vPosition[0]) > fMaxDist ||
+            std::abs(particle->position[0] - vPosition[0]) > fMaxDist)
+        {
+            return;
+        }
+
+        if (iNumParticles == 1)
+        {
+            Vector3 vSeparation = particle->position - pParticle->position;
+            if (vSeparation.lengthSquared() < fSearchRadius * fSearchRadius)
+            {
+                pList->AddEnd(pParticle);
+            }
+
+            return;
+        }
+
+        for (int i = 0; i < 8; i++)
+        {
+            if (pNodes[i] != 0)
+            {
+                FindNeighbours(pList, particle, fSearchRadius);
+            }
+        }
     }
 };

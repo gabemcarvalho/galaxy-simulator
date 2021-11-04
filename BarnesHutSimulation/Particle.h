@@ -14,6 +14,8 @@ struct Particle2D
     Vector2 position;
     Vector2 velocity;
 
+    Particle2D* next;
+
     void step(float fDeltaTime)
     {
         position += velocity * fDeltaTime;
@@ -26,13 +28,16 @@ struct Particle2D
 
 struct Particle3D
 {
-    Particle3D() : position(), velocity(), mass(g_fParticleMass) {}
-    Particle3D(Vector3& vPosition, Vector3& vVelocity, float fMass) : position(vPosition), velocity(vVelocity), mass(fMass) {}
-    Particle3D(POS_TYPE fX, POS_TYPE fY, POS_TYPE fZ, POS_TYPE fVx, POS_TYPE fVy, POS_TYPE fVz, float fMass) : position(fX, fY, fZ), velocity(fVx, fVy, fVz), mass(fMass) {}
+    Particle3D() : position(), velocity(), mass(g_fParticleMass), h(0) {}
+    Particle3D(Vector3& vPosition, Vector3& vVelocity, float fMass, POS_TYPE fH) : position(vPosition), velocity(vVelocity), mass(fMass), h(fH) {}
+    Particle3D(POS_TYPE fX, POS_TYPE fY, POS_TYPE fZ, POS_TYPE fVx, POS_TYPE fVy, POS_TYPE fVz, float fMass, POS_TYPE fH) : position(fX, fY, fZ), velocity(fVx, fVy, fVz), mass(fMass), h(fH) {}
 
     float mass;
     Vector3 position;
     Vector3 velocity;
+    POS_TYPE h; // kernel smoothing length
+
+    Particle3D* next;
 
     void step(float fDeltaTime)
     {
