@@ -35,9 +35,13 @@ struct Particle3D
     float mass;
     Vector3 position;
     Vector3 velocity;
-    
+    POS_TYPE density;
+    POS_TYPE f;
     POS_TYPE h; // kernel smoothing length
-    POS_TYPE dist; // saved distance to other particle in kernel calculation
+    
+    // dist to particle in neighbour list
+    Vector3 vSeparation;
+    POS_TYPE fSeparation;
 
     Particle3D* next;
 

@@ -138,9 +138,10 @@ struct OctreeNode
                 return;
             }
 
-            Vector3 vSeparation = particle->position - pParticle->position;
-            if (vSeparation.lengthSquared() < fSearchRadius * fSearchRadius)
+            pParticle->vSeparation = particle->position - pParticle->position;
+            if (pParticle->vSeparation.lengthSquared() < fSearchRadius * fSearchRadius)
             {
+                pParticle->fSeparation = std::sqrt(pParticle->vSeparation.lengthSquared());
                 pList->AddEnd(pParticle);
             }
 

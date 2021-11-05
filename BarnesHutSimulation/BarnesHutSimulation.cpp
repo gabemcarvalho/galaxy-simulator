@@ -11,6 +11,37 @@
 #include "Distributions.h"
 #include "LinkedList.h"
 
+// Kernel
+POS_TYPE W(POS_TYPE r, POS_TYPE h)
+{
+    POS_TYPE q = r / (2.0 * h);
+    if (q < 0.5)
+    {
+        return 8.0 / PI * (1.0 - 6.0 * q * q + 6.0 * std::pow(q, 3));
+    }
+    else if (q < 1.0)
+    {
+        return 16.0 / PI * std::pow(1.0 - q, 3);
+    }
+    
+    return 0.0;
+}
+
+POS_TYPE dWdq(POS_TYPE r, POS_TYPE h)
+{
+    POS_TYPE q = r / (2.0 * h);
+    if (q < 0.5)
+    {
+        return 48.0 / PI * (-2.0 * q + 3.0 * q * q);
+    }
+    else if (q < 1.0)
+    {
+        -48.0 / PI * std::pow(1 - q, 2);
+    }
+
+    return 0.0;
+}
+
 int main()
 {
     srand(g_iSeed);
@@ -24,7 +55,7 @@ int main()
     std::ofstream outDark(g_sOutFilenameDark, std::ofstream::out);
     std::ofstream outGas(g_sOutFilenameGas, std::ofstream::out);
 
-    for (int i = 0; i < g_iNumSteps; i++)
+    for (int step = 0; step < g_iNumSteps; step++)
     {
         // initialize tree with first particle
         OctreeNode* octreeDark = g_iNumParticlesDark ? new OctreeNode(particlesDark[0]) : new OctreeNode();
@@ -48,6 +79,28 @@ int main()
             octreeGas->PlaceParticle(particlesGas[j]);
         }
 
+        // gas density estimate
+        for (int i = 0; i < g_iNumParticlesGas; i++)
+        {
+            particlesGas[i]->density = 0;
+            POS_TYPE fF_sum = 0;
+            POS_TYPE fW_ij = 0;
+            POS_TYPE fdWdq_ij = 0;
+
+            neighbourList.Clear();
+            octreeGas->FindNeighbours(&neighbourList, particlesGas[i], 2.0f * particlesGas[i]->h);
+            for (List<Particle3D>::Iterator iter = neighbourList.GetIterator(); !iter.Done(); iter.Next())
+            {
+                Particle3D* neighbour = iter.GetValue();
+                fW_ij = W(neighbour->fSeparation, particlesGas[i]->h);
+                fdWdq_ij = dWdq(neighbour->fSeparation, particlesGas[i]->h);
+                particlesGas[i]->density += neighbour->mass * fW_ij;
+                fF_sum += fdWdq_ij * neighbour->fSeparation / fW_ij;
+            }
+
+            particlesGas[i]->f = 1.0 / (1.0 + fF_sum / (6.0 * particlesGas[i]->h));
+        }
+
         // compute velocities
         for (int j = 0; j < g_iNumParticlesDark; j++)
         {
@@ -55,19 +108,36 @@ int main()
             particlesDark[j]->velocity += octreeGas->CalculateGravityOnParticle(particlesDark[j]) * g_fDeltaTime;
         }
 
-        for (int j = 0; j < g_iNumParticlesGas; j++)
+        for (int i = 0; i < g_iNumParticlesGas; i++)
         {
-            particlesGas[j]->velocity += octreeDark->CalculateGravityOnParticle(particlesGas[j]) * g_fDeltaTime;
-            particlesGas[j]->velocity += octreeGas->CalculateGravityOnParticle(particlesGas[j]) * g_fDeltaTime;
+            particlesGas[i]->velocity += octreeDark->CalculateGravityOnParticle(particlesGas[i]) * g_fDeltaTime;
+            particlesGas[i]->velocity += octreeGas->CalculateGravityOnParticle(particlesGas[i]) * g_fDeltaTime;
             
             neighbourList.Clear();
-            octreeGas->FindNeighbours(&neighbourList, particlesGas[j], particlesGas[j]->h);
+            octreeGas->FindNeighbours(&neighbourList, particlesGas[i], 2.0f * particlesGas[i]->h);
             
+            float rho_i = 0.0f;
+
             for (List<Particle3D>::Iterator iter = neighbourList.GetIterator(); !iter.Done(); iter.Next())
             {
                 Particle3D* neighbour = iter.GetValue();
-                // do some stuff with the list of neighbours
+
+                /*
+                Vector3 vR_ij = particlesGas[i]->position - neighbour->position;
+                POS_TYPE fR_ij = std::sqrt(vR_ij.lengthSquared());
+                POS_TYPE fW_ij = W(fR_ij, neighbour->h);
+                POS_TYPE dWij_dq = dWdq(fR_ij, particlesGas[i]->h);
+
+                float fRho_i = neighbour->mass * fW_ij;
+                rho_i += fRho_i;
+
+                Vector3 dWdr = vR_ij * (dWij_dq / particlesGas[i]->h / fR_ij);
+
+                POS_TYPE dqdh = -fR_ij / (2.0 * particlesGas[i]->h * particlesGas[i]->h);
+                POS_TYPE drhodh = neighbour->mass * dWij_dq * dqdh;
+                */
             }
+            
         }
 
         // step
@@ -103,7 +173,7 @@ int main()
         }
 
         // progress
-        std::cout << "[" << i + 1 << "/" << g_iNumSteps << "]" << std::endl;
+        std::cout << "[" << step + 1 << "/" << g_iNumSteps << "]" << std::endl;
 
         octreeDark->Delete();
         delete octreeDark;
