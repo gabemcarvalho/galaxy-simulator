@@ -131,6 +131,22 @@ struct OctreeNode
 
     void FindNeighbours(List<Particle3D>* pList, Particle3D* particle, POS_TYPE fSearchRadius)
     {
+        if (iNumParticles == 1)
+        {
+            if (particle == pParticle)
+            {
+                return;
+            }
+
+            Vector3 vSeparation = particle->position - pParticle->position;
+            if (vSeparation.lengthSquared() < fSearchRadius * fSearchRadius)
+            {
+                pList->AddEnd(pParticle);
+            }
+
+            return;
+        }
+        
         // if the node volume does not intersect a cube around the particle, stop traversing down this path
         POS_TYPE fMaxDist = fSearchRadius + fWidth;
         if (std::abs(particle->position[0] - vPosition[0]) > fMaxDist ||
@@ -140,22 +156,11 @@ struct OctreeNode
             return;
         }
 
-        if (iNumParticles == 1)
-        {
-            Vector3 vSeparation = particle->position - pParticle->position;
-            if (vSeparation.lengthSquared() < fSearchRadius * fSearchRadius)
-            {
-                pList->AddEnd(pParticle);
-            }
-
-            return;
-        }
-
         for (int i = 0; i < 8; i++)
         {
             if (pNodes[i] != 0)
             {
-                FindNeighbours(pList, particle, fSearchRadius);
+                pNodes[i]->FindNeighbours(pList, particle, fSearchRadius);
             }
         }
     }
