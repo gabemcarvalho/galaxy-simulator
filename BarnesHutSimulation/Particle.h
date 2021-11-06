@@ -38,6 +38,7 @@ struct Particle3D
     POS_TYPE density;
     POS_TYPE f;
     POS_TYPE h; // kernel smoothing length
+    float A;
     
     // dist to particle in neighbour list
     Vector3 vSeparation;

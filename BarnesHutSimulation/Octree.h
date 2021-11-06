@@ -133,7 +133,7 @@ struct OctreeNode
     {
         if (iNumParticles == 1)
         {
-            if (particle == pParticle)
+            if (particle == pParticle) // still need to include the particle in the density calculation
             {
                 return;
             }

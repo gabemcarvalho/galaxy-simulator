@@ -44,7 +44,7 @@ def generate_pointcloud(data, directory):
                 # write x,y,z as x,z,y (since y is up in TouchDesigner)
                 f.write(str(data[i,3*j]) + "," + str(data[i,3*j+2]) + "," + str(data[i,3*j+1]) + '\n')
                 
-    print("Exported pointcloud to" + directory)
+    print("Exported pointcloud to " + directory)
 
 def main():
     

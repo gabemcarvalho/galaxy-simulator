@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
+#include <thread>
 
 #include "Globals.h"
 #include "Vector2.h"
@@ -32,14 +33,76 @@ POS_TYPE dWdq(POS_TYPE r, POS_TYPE h)
     POS_TYPE q = r / (2.0 * h);
     if (q < 0.5)
     {
-        return 48.0 / PI * (-2.0 * q + 3.0 * q * q);
+        return -48.0 / PI * q * (2.0 + 3.0 * q);
     }
     else if (q < 1.0)
     {
-        -48.0 / PI * std::pow(1 - q, 2);
+        return -48.0 / PI * std::pow(1 - q, 2);
     }
 
     return 0.0;
+}
+
+// assumes first particle is already in octree
+void ConstructOctree(OctreeNode* octree, Particle3D** aParticles, int iNumParticles)
+{
+    for (int i = 1; i < iNumParticles; i++)
+    {
+        octree->PlaceParticle(aParticles[i]);
+    }
+}
+
+void CalculateDensityEstimate(Particle3D** aParticles, OctreeNode* octree, int iNumParticles)
+{
+    List<Particle3D> neighbourList = List<Particle3D>();
+    
+    for (int i = 0; i < iNumParticles; i++)
+    {
+        aParticles[i]->density = W(0, aParticles[i]->h); // density should include the particle itself
+        POS_TYPE fF_sum = 0;
+        
+        POS_TYPE fW_ij = 0;
+        POS_TYPE fdWdq_ij = 0;
+
+        neighbourList.Clear();
+        octree->FindNeighbours(&neighbourList, aParticles[i], 2.0f * aParticles[i]->h);
+        for (List<Particle3D>::Iterator iter = neighbourList.GetIterator(); !iter.Done(); iter.Next())
+        {
+            Particle3D* neighbour = iter.GetValue();
+            fW_ij = W(neighbour->fSeparation, aParticles[i]->h);
+            fdWdq_ij = dWdq(neighbour->fSeparation, aParticles[i]->h);
+            aParticles[i]->density += neighbour->mass * fW_ij;
+            
+            fF_sum += fdWdq_ij * neighbour->mass * neighbour->fSeparation;
+        }
+
+        aParticles[i]->f = 1.0 / (1.0 - fF_sum / (6.0 * aParticles[i]->h * aParticles[i]->density));
+    }
+}
+
+void StepDarkMatter(Particle3D** aParticles, int iNumParticles, OctreeNode* octree1, OctreeNode* octree2, float fDeltaTime)
+{
+    for (int i = 0; i < iNumParticles; i++)
+    {
+        aParticles[i]->velocity += octree1->CalculateGravityOnParticle(aParticles[i]) * fDeltaTime;
+        aParticles[i]->velocity += octree2->CalculateGravityOnParticle(aParticles[i]) * fDeltaTime;
+        aParticles[i]->step(fDeltaTime);
+    }
+}
+
+void WriteStepPositions(std::ofstream* out, Particle3D** aParticles, int iNumParticles)
+{
+    if (iNumParticles == 0)
+    {
+        return;
+    }
+
+    *out << aParticles[0]->position[0] << "," << aParticles[0]->position[1] << "," << aParticles[0]->position[2];
+    for (int i = 1; i < iNumParticles; i++)
+    {
+        *out << "," << aParticles[i]->position[0] << "," << aParticles[i]->position[1] << "," << aParticles[i]->position[2];
+    }
+    *out << std::endl;
 }
 
 int main()
@@ -69,44 +132,20 @@ int main()
         List<Particle3D> neighbourList = List<Particle3D>();
 
         // sort particles
-        for (int j = 1; j < g_iNumParticlesDark; j++)
-        {
-            octreeDark->PlaceParticle(particlesDark[j]);
-        }
+        std::thread tDark(ConstructOctree, octreeDark, particlesDark, g_iNumParticlesDark);
+        std::thread tGas(ConstructOctree, octreeGas, particlesGas, g_iNumParticlesGas);
 
-        for (int j = 1; j < g_iNumParticlesGas; j++)
-        {
-            octreeGas->PlaceParticle(particlesGas[j]);
-        }
+        tDark.join();
+        tGas.join();
 
         // gas density estimate
-        for (int i = 0; i < g_iNumParticlesGas; i++)
-        {
-            particlesGas[i]->density = 0;
-            POS_TYPE fF_sum = 0;
-            POS_TYPE fW_ij = 0;
-            POS_TYPE fdWdq_ij = 0;
-
-            neighbourList.Clear();
-            octreeGas->FindNeighbours(&neighbourList, particlesGas[i], 2.0f * particlesGas[i]->h);
-            for (List<Particle3D>::Iterator iter = neighbourList.GetIterator(); !iter.Done(); iter.Next())
-            {
-                Particle3D* neighbour = iter.GetValue();
-                fW_ij = W(neighbour->fSeparation, particlesGas[i]->h);
-                fdWdq_ij = dWdq(neighbour->fSeparation, particlesGas[i]->h);
-                particlesGas[i]->density += neighbour->mass * fW_ij;
-                fF_sum += fdWdq_ij * neighbour->fSeparation / fW_ij;
-            }
-
-            particlesGas[i]->f = 1.0 / (1.0 + fF_sum / (6.0 * particlesGas[i]->h));
-        }
+        std::thread tDensity(CalculateDensityEstimate, particlesGas, octreeGas, g_iNumParticlesGas);
 
         // compute velocities
-        for (int j = 0; j < g_iNumParticlesDark; j++)
-        {
-            particlesDark[j]->velocity += octreeDark->CalculateGravityOnParticle(particlesDark[j]) * g_fDeltaTime;
-            particlesDark[j]->velocity += octreeGas->CalculateGravityOnParticle(particlesDark[j]) * g_fDeltaTime;
-        }
+        // note: the dark matter particle positions can get updated here since they are already saved in the octree
+        std::thread tDarkStep(StepDarkMatter, particlesDark, g_iNumParticlesDark, octreeDark, octreeGas, g_fDeltaTime);
+
+        tDensity.join();
 
         for (int i = 0; i < g_iNumParticlesGas; i++)
         {
@@ -122,55 +161,29 @@ int main()
             {
                 Particle3D* neighbour = iter.GetValue();
 
-                /*
-                Vector3 vR_ij = particlesGas[i]->position - neighbour->position;
-                POS_TYPE fR_ij = std::sqrt(vR_ij.lengthSquared());
-                POS_TYPE fW_ij = W(fR_ij, neighbour->h);
-                POS_TYPE dWij_dq = dWdq(fR_ij, particlesGas[i]->h);
+                Vector3 dWdr_hi = neighbour->vSeparation * (dWdq(neighbour->fSeparation, particlesGas[i]->h) / particlesGas[i]->h / neighbour->fSeparation);
+                Vector3 dWdr_hj = neighbour->vSeparation * (dWdq(neighbour->fSeparation, neighbour->h) / neighbour->h / neighbour->fSeparation);
 
-                float fRho_i = neighbour->mass * fW_ij;
-                rho_i += fRho_i;
-
-                Vector3 dWdr = vR_ij * (dWij_dq / particlesGas[i]->h / fR_ij);
-
-                POS_TYPE dqdh = -fR_ij / (2.0 * particlesGas[i]->h * particlesGas[i]->h);
-                POS_TYPE drhodh = neighbour->mass * dWij_dq * dqdh;
-                */
+                particlesGas[i]->velocity -= dWdr_hi * neighbour->mass * particlesGas[i]->f * g_fA * std::powf(particlesGas[i]->density, -0.3333f); // assuming adiabatic index of 5/3
+                particlesGas[i]->velocity -= dWdr_hj * neighbour->mass * neighbour->f * g_fA * std::powf(neighbour->density, -0.3333f);
             }
             
         }
 
         // step
-        for (int j = 1; j < g_iNumParticlesDark; j++)
-        {
-            particlesDark[j]->step(g_fDeltaTime);
-        }
-
         for (int j = 1; j < g_iNumParticlesGas; j++)
         {
             particlesGas[j]->step(g_fDeltaTime);
         }
         
+        tDarkStep.join();
+
         // write data
-        if (g_iNumParticlesDark > 0)
-        {
-            outDark << particlesDark[0]->position[0] << "," << particlesDark[0]->position[1] << "," << particlesDark[0]->position[2];
-            for (int j = 1; j < g_iNumParticlesDark; j++)
-            {
-                outDark << "," << particlesDark[j]->position[0] << "," << particlesDark[j]->position[1] << "," << particlesDark[j]->position[2];
-            }
-            outDark << std::endl;
-        }
+        std::thread tWriteDark(WriteStepPositions, &outDark, particlesDark, g_iNumParticlesDark);
+        std::thread tWriteGas(WriteStepPositions, &outGas, particlesGas, g_iNumParticlesGas);
         
-        if (g_iNumParticlesGas > 0)
-        {
-            outGas << particlesGas[0]->position[0] << "," << particlesGas[0]->position[1] << "," << particlesGas[0]->position[2];
-            for (int j = 1; j < g_iNumParticlesGas; j++)
-            {
-                outGas << "," << particlesGas[j]->position[0] << "," << particlesGas[j]->position[1] << "," << particlesGas[j]->position[2];
-            }
-            outGas << std::endl;
-        }
+        tWriteDark.join();
+        tWriteGas.join();
 
         // progress
         std::cout << "[" << step + 1 << "/" << g_iNumSteps << "]" << std::endl;
