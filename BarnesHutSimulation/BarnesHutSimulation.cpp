@@ -58,7 +58,7 @@ void CalculateDensityEstimate(Particle3D** aParticles, OctreeNode* octree, int i
     
     for (int i = 0; i < iNumParticles; i++)
     {
-        aParticles[i]->density = W(0, aParticles[i]->h); // density should include the particle itself
+        aParticles[i]->density = aParticles[i]->mass * W(0, aParticles[i]->h); // density should include the particle itself
         POS_TYPE fF_sum = 0;
         
         POS_TYPE fW_ij = 0;
@@ -77,6 +77,7 @@ void CalculateDensityEstimate(Particle3D** aParticles, OctreeNode* octree, int i
         }
 
         aParticles[i]->f = 1.0 / (1.0 - fF_sum / (6.0 * aParticles[i]->h * aParticles[i]->density));
+        aParticles[i]->num_neighbours = neighbourList.GetSize();
     }
 }
 
@@ -90,7 +91,7 @@ void StepDarkMatter(Particle3D** aParticles, int iNumParticles, OctreeNode* octr
     }
 }
 
-void WriteStepPositions(std::ofstream* out, Particle3D** aParticles, int iNumParticles)
+void WriteStepPositions(std::ofstream* out, Particle3D** aParticles, int iNumParticles, bool bWriteH)
 {
     if (iNumParticles == 0)
     {
@@ -98,9 +99,18 @@ void WriteStepPositions(std::ofstream* out, Particle3D** aParticles, int iNumPar
     }
 
     *out << aParticles[0]->position[0] << "," << aParticles[0]->position[1] << "," << aParticles[0]->position[2];
+    if (bWriteH)
+    {
+        *out << "," << aParticles[0]->h;
+    }
+
     for (int i = 1; i < iNumParticles; i++)
     {
         *out << "," << aParticles[i]->position[0] << "," << aParticles[i]->position[1] << "," << aParticles[i]->position[2];
+        if (bWriteH)
+        {
+            *out << "," << aParticles[i]->h;
+        }
     }
     *out << std::endl;
 }
@@ -109,10 +119,10 @@ int main()
 {
     srand(g_iSeed);
 
-    Particle3D** particlesDark = new Particle3D* [g_iNumParticlesDark];
+    Particle3D** particlesDark = g_iNumParticlesDark ? new Particle3D* [g_iNumParticlesDark] : 0;
     GenerateDistributionUniformSphere(particlesDark, g_iNumParticlesDark, g_fDarkParticleMass, g_fCloudRadius, g_fMaxStartSpeed, g_fInitialH);
 
-    Particle3D** particlesGas = new Particle3D * [g_iNumParticlesGas];
+    Particle3D** particlesGas = g_iNumParticlesGas ? new Particle3D * [g_iNumParticlesGas] : 0;
     GenerateDistributionUniformSphere(particlesGas, g_iNumParticlesGas, g_fGasParticleMass, g_fCloudRadius, g_fMaxStartSpeed, g_fInitialH);
 
     std::ofstream outDark(g_sOutFilenameDark, std::ofstream::out);
@@ -149,6 +159,13 @@ int main()
 
         for (int i = 0; i < g_iNumParticlesGas; i++)
         {
+            int a = 0;
+            if (i == 2)
+            {
+                a++;
+            }
+
+
             particlesGas[i]->velocity += octreeDark->CalculateGravityOnParticle(particlesGas[i]) * g_fDeltaTime;
             particlesGas[i]->velocity += octreeGas->CalculateGravityOnParticle(particlesGas[i]) * g_fDeltaTime;
             
@@ -174,19 +191,27 @@ int main()
         for (int j = 1; j < g_iNumParticlesGas; j++)
         {
             particlesGas[j]->step(g_fDeltaTime);
+
+            // update smoothing lengths (this is just approximate and might cause problems)
+            particlesGas[j]->h *= 0.5 * (1.0 + std::pow((g_iTargetNumNeighbours + 1) / (particlesGas[j]->num_neighbours + 1), 1.0 / 3.0));
         }
         
         tDarkStep.join();
 
         // write data
-        std::thread tWriteDark(WriteStepPositions, &outDark, particlesDark, g_iNumParticlesDark);
-        std::thread tWriteGas(WriteStepPositions, &outGas, particlesGas, g_iNumParticlesGas);
+        std::thread tWriteDark(WriteStepPositions, &outDark, particlesDark, g_iNumParticlesDark, false);
+        std::thread tWriteGas(WriteStepPositions, &outGas, particlesGas, g_iNumParticlesGas, true);
         
         tWriteDark.join();
         tWriteGas.join();
 
         // progress
-        std::cout << "[" << step + 1 << "/" << g_iNumSteps << "]" << std::endl;
+        std::cout << "[" << step + 1 << "/" << g_iNumSteps << "]";
+        if (step == 68)
+        {
+            std::cout << " nice!";
+        }
+        std::cout << std::endl;
 
         octreeDark->Delete();
         delete octreeDark;

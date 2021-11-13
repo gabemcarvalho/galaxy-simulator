@@ -151,8 +151,8 @@ struct OctreeNode
         // if the node volume does not intersect a cube around the particle, stop traversing down this path
         POS_TYPE fMaxDist = fSearchRadius + fWidth;
         if (std::abs(particle->position[0] - vPosition[0]) > fMaxDist ||
-            std::abs(particle->position[0] - vPosition[0]) > fMaxDist ||
-            std::abs(particle->position[0] - vPosition[0]) > fMaxDist)
+            std::abs(particle->position[1] - vPosition[1]) > fMaxDist ||
+            std::abs(particle->position[2] - vPosition[2]) > fMaxDist)
         {
             return;
         }

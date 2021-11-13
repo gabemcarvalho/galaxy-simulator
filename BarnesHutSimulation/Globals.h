@@ -5,24 +5,29 @@
 const int g_iNumParticlesDark = 1024;
 const int g_iNumParticlesGas = 1024;
 
-const float g_fTotalDarkMass = 1.0f;
-const float g_fTotalGasMass = 0.1f;
-const float g_fDarkParticleMass = g_fTotalDarkMass / static_cast<float>(g_iNumParticlesDark);
-const float g_fGasParticleMass = g_fTotalGasMass / static_cast<float>(g_iNumParticlesGas);
+const double g_fTotalDarkMass = 106.0e10L;
+const double g_fTotalGasMass = 10.108e10L;
+const double g_fDarkParticleMass = g_iNumParticlesDark ? g_fTotalDarkMass / static_cast<float>(g_iNumParticlesDark) : 0;
+const double g_fGasParticleMass = g_iNumParticlesGas ? g_fTotalGasMass / static_cast<float>(g_iNumParticlesGas) : 0;
 
-const float g_fSimulationRadius = 100.0f;
-const float g_fCloudRadius = 5.9f;
+const double g_fSimulationRadius = 200.0L;
+const double g_fCloudRadius = 37.0L; // kpc
 
-const int g_iNumSteps = 500;
-const float g_fDeltaTime = 0.05f;
+const int g_iNumSteps = 200;
+const double g_fDeltaTime = 0.0015L; // Gyr
 
-const float PI = 3.141592653589f;
-const float g_fGravitationConst = 15.0f;
-const float g_fMaxStartSpeed = 1.0;
-const float g_fGravSofteningDist = 0.05f * g_fCloudRadius;
-const float g_fThetaSquared = 0.4f * 0.4f; // node taken as point mass if width/distance < theta
-const float g_fInitialH = 0.2f;
-const float g_fA = 0.1f; // constant in equation of state
+const double PI = 3.141592653589L;
+const double g_fGravitationConst = 4.51179e-6L; //15.0f; // kpc^3 Gyr^-2 M_sun^-1
+const double g_fMaxStartSpeed = 100.0L;// 24.8L; // kpc Gyr^-1
+const double g_fGravSofteningDist = 0.05L * g_fCloudRadius;
+const double g_fThetaSquared = 0.4L * 0.4L; // node taken as point mass if width/distance < theta
+const double g_fInitialH = 4.0L;
+
+const double g_fBoltzmannConst = 0.0048965L; // kpc^2 Gyr^-2 K-1 (1.431e-29L / 2.9225e-27L)  k/m
+const float g_fTemperature = 10000.0L;
+const float g_fA = 0.000001;//g_fBoltzmannConst * g_fTemperature; // constant in equation of state in kpc^2 Gyr^-2
+
+const int g_iTargetNumNeighbours = 50;
 
 const int g_iSeed = 1;
 const float FLOAT_RAND_MAX = static_cast<float>(RAND_MAX);

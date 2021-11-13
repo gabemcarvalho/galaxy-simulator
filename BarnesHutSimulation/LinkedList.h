@@ -34,12 +34,13 @@ public:
 
 	Iterator GetIterator() { return Iterator(this, m_Head); }
 
-	void Clear() { m_Head = m_Tail = 0; }
+	void Clear() { m_Head = m_Tail = 0; m_iSize = 0; }
 
 	TYPE* GetStart() { return m_Head; }
 	void SetStart(TYPE* pEntry) { m_Head = pEntry; }
 	TYPE* GetEnd() { return m_Tail; }
 	void SetEnd(TYPE* pEntry) { m_Tail = pEntry; }
+	int GetSize() { return m_iSize; }
 
 	void AddEnd(TYPE* element)
 	{

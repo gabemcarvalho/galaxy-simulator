@@ -7,6 +7,11 @@
 
 void GenerateDistributionUniformCircle(Particle2D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fRadius, POS_TYPE fEdgeSpeed)
 {
+    if (iNumParticles == 0)
+    {
+        return;
+    }
+
     for (int i = 0; i < iNumParticles; i++)
     {
         POS_TYPE fR = std::sqrt(frand());
@@ -24,6 +29,11 @@ void GenerateDistributionUniformCircle(Particle2D** aParticles, int iNumParticle
 
 void GenerateDistributionUniformDisk(Particle3D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fRadius, POS_TYPE fEdgeSpeed, POS_TYPE fH)
 {
+    if (iNumParticles == 0)
+    {
+        return;
+    }
+
     for (int i = 0; i < iNumParticles; i++)
     {
         POS_TYPE fR = std::sqrt(frand());
@@ -41,6 +51,11 @@ void GenerateDistributionUniformDisk(Particle3D** aParticles, int iNumParticles,
 
 void GenerateDistributionUniformSphere(Particle3D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fRadius, POS_TYPE fEdgeSpeed, POS_TYPE fH)
 {
+    if (iNumParticles == 0)
+    {
+        return;
+    }
+
     for (int i = 0; i < iNumParticles; i++)
     {
         POS_TYPE fR = std::sqrt(frand());
@@ -59,6 +74,11 @@ void GenerateDistributionUniformSphere(Particle3D** aParticles, int iNumParticle
 
 void GenerateDistributionUniformCube(Particle3D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fRadius, POS_TYPE, POS_TYPE fH)
 {
+    if (iNumParticles == 0)
+    {
+        return;
+    }
+
     for (int i = 0; i < iNumParticles; i++)
     {
         POS_TYPE fX = (1.0f - 2.0f * frand()) * fRadius;
