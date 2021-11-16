@@ -32,8 +32,12 @@ const int g_iTargetNumNeighbours = 50;
 const int g_iSeed = 1;
 const float FLOAT_RAND_MAX = static_cast<float>(RAND_MAX);
 
-const char* g_sOutFilenameDark = "dataDM.np";
-const char* g_sOutFilenameGas = "dataGas.np";
+const char* g_sPosFilenameDark = "dataDM.np";
+const char* g_sPosFilenameGas = "dataGas.np";
+
+const bool g_bWriteVelocity = true;
+const char* g_sVelFilenameDark = "dataDM_velocity.np";
+const char* g_sVelFilenameGas = "dataGas_velocity.np";
 
 inline float frand()
 {

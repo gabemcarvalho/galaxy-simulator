@@ -68,5 +68,12 @@ def main():
     if dataDM.shape[0] > 0: generate_pointcloud_xyz(dataDM, 'output/pointcloudDM/')
     if dataGas.shape[0] > 0: generate_pointcloud_xyzw(dataGas, 'output/pointcloudGas/')            
 
+    if True:
+        dataDMVel = np.loadtxt('output/dataDM_velocity.np', float, delimiter=',')
+        dataGasVel = np.loadtxt('output/dataGas_velocity.np', float, delimiter=',')
+        
+        if dataDMVel.shape[0] > 0: generate_fits(dataDMVel, 'output/dataDM_velocity.fits', 3)
+        if dataGasVel.shape[0] > 0: generate_fits(dataGasVel, 'output/dataGas_velocity.fits', 3)
+
 if __name__ == '__main__':
     main()

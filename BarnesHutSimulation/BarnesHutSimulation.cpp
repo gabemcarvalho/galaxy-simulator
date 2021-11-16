@@ -115,6 +115,21 @@ void WriteStepPositions(std::ofstream* out, Particle3D** aParticles, int iNumPar
     *out << std::endl;
 }
 
+void WriteStepVelocities(std::ofstream* out, Particle3D** aParticles, int iNumParticles)
+{
+    if (iNumParticles == 0)
+    {
+        return;
+    }
+
+    *out << aParticles[0]->velocity[0] << "," << aParticles[0]->velocity[1] << "," << aParticles[0]->velocity[2];
+    for (int i = 1; i < iNumParticles; i++)
+    {
+        *out << "," << aParticles[i]->velocity[0] << "," << aParticles[i]->velocity[1] << "," << aParticles[i]->velocity[2];
+    }
+    *out << std::endl;
+}
+
 int main()
 {
     srand(g_iSeed);
@@ -125,8 +140,16 @@ int main()
     Particle3D** particlesGas = g_iNumParticlesGas ? new Particle3D * [g_iNumParticlesGas] : 0;
     GenerateDistributionUniformSphere(particlesGas, g_iNumParticlesGas, g_fGasParticleMass, g_fCloudRadius, g_fMaxStartSpeed, g_fInitialH);
 
-    std::ofstream outDark(g_sOutFilenameDark, std::ofstream::out);
-    std::ofstream outGas(g_sOutFilenameGas, std::ofstream::out);
+    std::ofstream outDark(g_sPosFilenameDark, std::ofstream::out);
+    std::ofstream outGas(g_sPosFilenameGas, std::ofstream::out);
+
+    std::ofstream outDarkVel;
+    std::ofstream outGasVel;
+    if (g_bWriteVelocity)
+    {
+        outDarkVel = std::ofstream(g_sVelFilenameDark, std::ofstream::out);
+        outGasVel = std::ofstream(g_sVelFilenameGas, std::ofstream::out);
+    }
 
     for (int step = 0; step < g_iNumSteps; step++)
     {
@@ -202,8 +225,22 @@ int main()
         std::thread tWriteDark(WriteStepPositions, &outDark, particlesDark, g_iNumParticlesDark, false);
         std::thread tWriteGas(WriteStepPositions, &outGas, particlesGas, g_iNumParticlesGas, true);
         
+        std::thread tWriteDarkVel;
+        std::thread tWriteGasVel;
+        if (g_bWriteVelocity)
+        {
+            tWriteDarkVel = std::thread(WriteStepVelocities, &outDarkVel, particlesDark, g_iNumParticlesDark);
+            tWriteGasVel = std::thread(WriteStepVelocities, &outGasVel, particlesGas, g_iNumParticlesGas);
+        }
+
         tWriteDark.join();
         tWriteGas.join();
+
+        if (g_bWriteVelocity)
+        {
+            tWriteDarkVel.join();
+            tWriteGasVel.join();
+        }
 
         // progress
         std::cout << "[" << step + 1 << "/" << g_iNumSteps << "]";
@@ -221,6 +258,12 @@ int main()
 
     outDark.close();
     outGas.close();
+
+    if (g_bWriteVelocity)
+    {
+        outDarkVel.close();
+        outGasVel.close();
+    }
 
     for (int i = 0; i < g_iNumParticlesDark; i++)
     {
