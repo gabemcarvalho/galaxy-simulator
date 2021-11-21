@@ -140,7 +140,7 @@ void CalculateGasAcceleration(Particle3D** aParticles, int iNumParticles, Octree
             {
                 // Monaghan 1997 viscosity (with softening)
                 // POS_TYPE fw_ij = fVdotR / neighbour->fSeparation;
-                POS_TYPE fw_ij = fVdotR * neighbour->fSeparation / (std::pow(neighbour->fSeparation, 2) + 0.01*std::pow(particle->h, 2));
+                POS_TYPE fw_ij = fVdotR * neighbour->fSeparation / (std::pow(neighbour->fSeparation, 2) + 0.02*std::pow(particle->h, 2));
                 const float alpha = 1.0f;
                 POS_TYPE fSoundSpeed = std::sqrt(g_fA); // assuming isothermal
                 POS_TYPE fVsig_ij = 2.0f * fSoundSpeed - 3.0f * fw_ij;
