@@ -22,4 +22,5 @@ struct Vector3
     Vector3 operator/(const float rhs) { Vector3 v;  v[0] = data[0] / rhs; v[1] = data[1] / rhs; v[2] = data[2] / rhs; return v; }
 
     POS_TYPE lengthSquared() { return data[0] * data[0] + data[1] * data[1] + data[2] * data[2]; }
+    POS_TYPE dot(Vector3 v) { return  data[0] * v[0] + data[1] * v[1] + data[2] * v[2]; }
 };
