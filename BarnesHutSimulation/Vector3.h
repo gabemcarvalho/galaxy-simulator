@@ -23,4 +23,5 @@ struct Vector3
 
     POS_TYPE lengthSquared() { return data[0] * data[0] + data[1] * data[1] + data[2] * data[2]; }
     POS_TYPE dot(Vector3 v) { return  data[0] * v[0] + data[1] * v[1] + data[2] * v[2]; }
+    Vector3 cross(Vector3 v) { return Vector3(data[1]*v[2] - data[2]*v[1], data[2]*v[0] - data[0]*v[2], data[0]*v[1] - data[1]*v[0]); }
 };

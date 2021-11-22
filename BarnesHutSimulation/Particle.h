@@ -28,40 +28,53 @@ struct Particle2D
 
 struct Particle3D
 {
-    Particle3D() : position(), velocity(), mass(0), h(0) {}
-    Particle3D(Vector3& vPosition, Vector3& vVelocity, float fMass, POS_TYPE fH) : position(vPosition), velocity(vVelocity), mass(fMass), h(fH) {}
-    Particle3D(POS_TYPE fX, POS_TYPE fY, POS_TYPE fZ, POS_TYPE fVx, POS_TYPE fVy, POS_TYPE fVz, float fMass, POS_TYPE fH) : position(fX, fY, fZ), velocity(fVx, fVy, fVz), mass(fMass), h(fH) {}
+    Particle3D() : 
+        position(), velocity(), velocity_last(),
+        mass(0), h(0), step_bin(0), target_bin(0) {}
+    Particle3D(Vector3& vPosition, Vector3& vVelocity, float fMass, POS_TYPE fH) : 
+        position(vPosition), velocity(vVelocity), velocity_last(vVelocity),
+        mass(fMass), h(fH), step_bin(0), target_bin(0) {}
+    Particle3D(POS_TYPE fX, POS_TYPE fY, POS_TYPE fZ, POS_TYPE fVx, POS_TYPE fVy, POS_TYPE fVz, float fMass, POS_TYPE fH) : 
+        position(fX, fY, fZ), velocity(fVx, fVy, fVz), velocity_last(fVx, fVy, fVz),
+        mass(fMass), h(fH), step_bin(0), target_bin(0) {}
 
     float mass;
     Vector3 position;
     Vector3 velocity;
+    Vector3 acceleration_grav;
+    Vector3 acceleration_sph;
     POS_TYPE density;
     POS_TYPE f;
     POS_TYPE h; // kernel smoothing length
     float A;
+    POS_TYPE shear_factor; // dampens viscosity
 
     // dist to particle in neighbour list
     Vector3 vSeparation;
     POS_TYPE fSeparation;
     uint16_t num_neighbours;
 
+    // time integration
+    Vector3 velocity_last;
+    int step_bin;
+    int target_bin;
+
     Particle3D* next;
 
-    void step(float fDeltaTime)
+    void step_position(float fDeltaTime)
     {
         position += velocity * fDeltaTime;
-        
+
         position[0] = std::fmod(position[0] + g_fSimulationRadius, 2.0L * g_fSimulationRadius) - g_fSimulationRadius;
         position[1] = std::fmod(position[1] + g_fSimulationRadius, 2.0L * g_fSimulationRadius) - g_fSimulationRadius;
         position[2] = std::fmod(position[2] + g_fSimulationRadius, 2.0L * g_fSimulationRadius) - g_fSimulationRadius;
-        
-        
+
+
         if (position[0] > g_fSimulationRadius) position[0] -= 2.0f * g_fSimulationRadius;
         if (position[0] < -g_fSimulationRadius) position[0] += 2.0f * g_fSimulationRadius;
         if (position[1] > g_fSimulationRadius) position[1] -= 2.0f * g_fSimulationRadius;
         if (position[1] < -g_fSimulationRadius) position[1] += 2.0f * g_fSimulationRadius;
         if (position[2] > g_fSimulationRadius) position[2] -= 2.0f * g_fSimulationRadius;
         if (position[2] < -g_fSimulationRadius) position[2] += 2.0f * g_fSimulationRadius;
-        
     }
 };
