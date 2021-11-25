@@ -33,7 +33,7 @@ POS_TYPE dWdq(POS_TYPE r, POS_TYPE h)
     POS_TYPE q = r / (2.0 * h);
     if (q < 0.5)
     {
-        return -48.0 / PI * q * (2.0 + 3.0 * q);
+        return 48.0 / PI * q * (3.0 * q - 2.0);
     }
     else if (q < 1.0)
     {
@@ -64,14 +64,22 @@ void CalculateDensityEstimate(Particle3D** aParticles, OctreeNode* octree, int i
         {
             continue;
         }
-
+        
         particle->density = particle->mass * W(0, particle->h); // density should include the particle itself
-        POS_TYPE fF_sum = 0;
+        particle->drhodh = 0;
         POS_TYPE fVelocity_div = 0;
         Vector3 vVelocity_curl = Vector3(0, 0, 0);
 
         neighbourList.Clear();
         octree->FindNeighbours(&neighbourList, particle, 2.0f * particle->h);
+        /*while (std::abs(neighbourList.GetSize() - g_iTargetNumNeighbours) > g_iNeighbourTolerance)
+        {
+            particle->h *= 0.5 * (1.0 + std::pow(static_cast<double>(g_iTargetNumNeighbours + 1) / static_cast<double>(neighbourList.GetSize() + 1), 1.0 / 3.0));
+            neighbourList.Clear();
+            octree->FindNeighbours(&neighbourList, particle, 2.0f * particle->h);
+        }*/
+        particle->num_neighbours = neighbourList.GetSize();
+
         for (List<Particle3D>::Iterator iter = neighbourList.GetIterator(); !iter.Done(); iter.Next())
         {
             Particle3D* neighbour = iter.GetValue();
@@ -79,7 +87,7 @@ void CalculateDensityEstimate(Particle3D** aParticles, OctreeNode* octree, int i
             POS_TYPE fdWdq_ij_hi = dWdq(neighbour->fSeparation, particle->h);
 
             particle->density += neighbour->mass * fW_ij_hi; // non-symmetrized density
-            fF_sum += fdWdq_ij_hi * neighbour->mass * neighbour->fSeparation; // also non-symmetrized
+            particle->drhodh -= neighbour->mass * neighbour->fSeparation * fdWdq_ij_hi; // also non-symmetrized
 
             // POS_TYPE fW_ij_hj = W(neighbour->fSeparation, neighbour->h);
             POS_TYPE fdWdq_ij_hj = dWdq(neighbour->fSeparation, neighbour->h);
@@ -91,8 +99,8 @@ void CalculateDensityEstimate(Particle3D** aParticles, OctreeNode* octree, int i
             vVelocity_curl += vV_ij.cross(dWdr) * neighbour->mass;
         }
 
-        particle->f = 1.0 / (1.0 - fF_sum / (6.0 * particle->h * particle->density));
-        particle->num_neighbours = neighbourList.GetSize();
+        particle->drhodh /= 2.0 * particle->h;
+        particle->f = 1.0 / (1.0 + particle->h * particle->drhodh / (3.0 * particle->density));
 
         if (particle->num_neighbours == 0) // should never happen, but it does occasionally with current h calculation
         {
@@ -144,11 +152,16 @@ void CalculateGasAcceleration(Particle3D** aParticles, int iNumParticles, Octree
                 // Monaghan 1997 viscosity (with softening)
                 POS_TYPE fw_ij = fVdotR * neighbour->fSeparation / (std::pow(neighbour->fSeparation, 2) + g_fViscositySoftening * std::pow(particle->h, 2));
                 const POS_TYPE alpha = 1.0;
+                const POS_TYPE beta = 2.0 * alpha;
                 POS_TYPE fSoundSpeed = std::sqrt(g_fA); // assuming isothermal
                 POS_TYPE fVsig_ij = 2.0 * fSoundSpeed - 3.0 * fw_ij;
                 fVsig_max = std::max(fVsig_max, fVsig_ij);
 
                 fViscFactor = -alpha * fVsig_ij * fw_ij / (particle->density + neighbour->density) * (particle->shear_factor + neighbour->shear_factor) / 2.0;
+
+                // standard viscosity
+                //POS_TYPE fMu_ij = (particle->h + neighbour->h) / 2.0 * fVdotR / std::pow(neighbour->fSeparation, 2);
+                //fViscFactor = fMu_ij * (-alpha * fSoundSpeed + beta * fMu_ij) / (particle->density + neighbour->density) * (particle->shear_factor + neighbour->shear_factor) / 2.0;
             }
 
             particle->acceleration_sph -= dWdr_hi * neighbour->mass * (particle->f * g_fA / particle->density + fViscFactor / 2.0f); // assuming isothermal ideal gas
@@ -156,7 +169,7 @@ void CalculateGasAcceleration(Particle3D** aParticles, int iNumParticles, Octree
         }
 
         // C_courant = 0.3
-        POS_TYPE target_timstep = 0.3 * particle->h / fVsig_max;
+        POS_TYPE target_timstep = g_fCourant * particle->h / fVsig_max;
         POS_TYPE fBin = std::log2(g_fMaxDeltaTime / target_timstep);
         particle->target_bin = std::max(std::min(static_cast<int>(fBin) + 1, g_iMaxBin), 0);
     }
@@ -270,8 +283,13 @@ void UpdateSmoothingLength(Particle3D** aParticles, int iNumParticles)
 {
     for (int i = 0; i < iNumParticles; i++)
     {
+        Particle3D* particle = aParticles[i];
         // this is just approximate and might cause problems
-        aParticles[i]->h *= 0.5 * (1.0 + std::pow((g_iTargetNumNeighbours + 1) / (aParticles[i]->num_neighbours + 1), 1.0 / 3.0));
+        particle->h *= 0.5 * (1.0 + std::pow(static_cast<double>(g_iTargetNumNeighbours + 1) / static_cast<double>(particle->num_neighbours + 1), 1.0 / 3.0));
+
+        // Newton-Raphson iteration
+        //particle->h -= (4.0 * PI / 3.0 * std::pow(particle->h, 3) * particle->density - static_cast<double>(g_iTargetNumNeighbours) * g_fGasParticleMass) /
+        //    (4.0 * PI * std::pow(particle->h, 2) * (particle->density + particle->h / 3.0 * particle->drhodh));
     }
 }
 

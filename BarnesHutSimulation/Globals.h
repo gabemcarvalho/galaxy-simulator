@@ -16,6 +16,7 @@ const double g_fCloudRadius = 100.0L; // kpc
 const int g_iNumSteps = 200;
 const double g_fMaxDeltaTime = 0.005L; // Gyr // 0.0015 for good simulation
 const int g_iMaxBin = 8;
+const double g_fCourant = 0.3;
 
 const double PI = 3.141592653589L;
 const double g_fGravitationConst = 4.51179e-6L; // kpc^3 Gyr^-2 M_sun^-1
@@ -25,9 +26,10 @@ const double g_fThetaSquared = 0.4L * 0.4L; // node taken as point mass if width
 const double g_fInitialH = 20.0L;
 
 const double g_fA = 144.97L;// constant in isothermal equation of state in kpc^2 Gyr^-2 (assumes T=10,000K)
-const double g_fViscositySoftening = 0.1L; // pretty high, but lower softening keeps giving errors
+const double g_fViscositySoftening = 0.01L; // pretty high, but lower softening keeps giving errors
 
 const int g_iTargetNumNeighbours = 50;
+const int g_iNeighbourTolerance = 5;
 
 const int g_iSeed = 1;
 const float FLOAT_RAND_MAX = static_cast<float>(RAND_MAX);

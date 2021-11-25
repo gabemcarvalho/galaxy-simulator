@@ -44,6 +44,7 @@ struct Particle3D
     Vector3 acceleration_grav;
     Vector3 acceleration_sph;
     POS_TYPE density;
+    POS_TYPE drhodh;
     POS_TYPE f;
     POS_TYPE h; // kernel smoothing length
     float A;
