@@ -32,7 +32,29 @@ def generate_fits(data, filename, dim):
     hdu.writeto(filename)
     
     print("Exported " + filename)
+  
+def generate_fits_singlestep(data, filename, dim):
+    # Convert array to correct format
+    positions = np.empty([int(data.shape[0] / dim), dim])
+    for i in range(int(data.shape[0] / dim)):
+        positions[i,:] = data[i*dim:i*dim+dim]
     
+    # Remove old file
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
+    
+    if os.path.exists(filename):
+        print('Failed to remove old .fits file')
+        return
+    
+    # Make a new FITS file
+    hdu = fits.PrimaryHDU(positions)
+    hdu.writeto(filename)
+    
+    print("Exported " + filename)
+
 def generate_pointcloud_xyz(data, directory):
     Path(directory).mkdir(parents=True, exist_ok=True)
     
@@ -57,23 +79,49 @@ def generate_pointcloud_xyzw(data, directory):
                 
     print("Exported pointcloud to " + directory)
 
+def data_exists(filename):
+    return os.path.isfile(filename) and os.stat(filename).st_size > 0
+
 def main():
     
-    dataDM = np.loadtxt('../output/dataDM.np', float, delimiter=',')
-    dataGas = np.loadtxt('../output/dataGas.np', float, delimiter=',')
+    output_dir = '../output/'
     
-    if dataDM.shape[0] > 0: generate_fits(dataDM, '../output/dataDM.fits', 3)
-    if dataGas.shape[0] > 0: generate_fits(dataGas, '../output/dataGas.fits', 4)
+    # position
+    filename = 'DarkMatter_position'
+    if data_exists(output_dir + filename + '.np'):
+        data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
+        generate_fits(data, output_dir + filename + '.fits', 3)
+        generate_pointcloud_xyz(data, output_dir + 'pointcloudDM/')
     
-    if dataDM.shape[0] > 0: generate_pointcloud_xyz(dataDM, '../output/pointcloudDM/')
-    if dataGas.shape[0] > 0: generate_pointcloud_xyzw(dataGas, '../output/pointcloudGas/')            
-
-    if True:
-        dataDMVel = np.loadtxt('../output/dataDM_velocity.np', float, delimiter=',')
-        dataGasVel = np.loadtxt('../output/dataGas_velocity.np', float, delimiter=',')
+    filename = 'Gas_position'
+    if data_exists(output_dir + filename + '.np'):
+        data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
+        generate_fits(data, output_dir + filename + '.fits', 4)
+        generate_pointcloud_xyz(data, output_dir + 'pointcloudGas/')
+               
+    # velocity
+    filename = 'DarkMatter_velocity'
+    if data_exists(output_dir + filename + '.np'):
+        data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
+        generate_fits_singlestep(data, output_dir + filename + '.fits', 3)
+    
+    filename = 'Gas_velocity'
+    if data_exists(output_dir + filename + '.np'):
+        data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
+        generate_fits_singlestep(data, output_dir + filename + '.fits', 3)
+    
+    # density
+    filename = 'DarkMatter_density'
+    if data_exists(output_dir + filename + '.np'):
+        data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
+        generate_fits_singlestep(data, output_dir + filename + '.fits', 1)
+    
+    filename = 'Gas_density'
+    if data_exists(output_dir + filename + '.np'):
+        data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
+        generate_fits_singlestep(data, output_dir + filename + '.fits', 1)
         
-        if dataDMVel.shape[0] > 0: generate_fits(dataDMVel, '../output/dataDM_velocity.fits', 3)
-        if dataGasVel.shape[0] > 0: generate_fits(dataGasVel, '../output/dataGas_velocity.fits', 3)
+    print('Done!')
 
 if __name__ == '__main__':
     main()

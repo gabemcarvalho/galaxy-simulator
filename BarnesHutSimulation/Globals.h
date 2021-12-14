@@ -46,7 +46,7 @@ const bool g_bWriteVelocity = true;
 std::string g_sVelFilenameDark = "../output/dataDM_velocity.np";
 std::string g_sVelFilenameGas = "../output/dataGas_velocity.np";
 
-const bool b_WriteDensity = true;
+const bool g_bWriteDensity = true;
 std::string g_sDensityFilenameDark = "../output/dataDM_density.np";
 std::string g_sDensityFilenameGas = "../output/dataGas_density.np";
 

@@ -116,6 +116,37 @@ void CalculateDensityEstimate(Particle3D** aParticles, OctreeNode* octree, int i
     }
 }
 
+void CalculateDensityOnly(Particle3D** aParticles, OctreeNode* octree, int iNumParticles, int iNeighbourTolerance)
+{
+    List<Particle3D> neighbourList = List<Particle3D>();
+
+    for (int i = 0; i < iNumParticles; i++)
+    {
+        Particle3D* particle = aParticles[i];
+
+        particle->density = particle->mass * W(0, particle->h); // density should include the particle itself
+
+        neighbourList.Clear();
+        octree->FindNeighbours(&neighbourList, particle, 2.0f * particle->h);
+        while (std::abs(neighbourList.GetSize() - g_iTargetNumNeighbours) > iNeighbourTolerance)
+        {
+            particle->h *= 0.5 * (1.0 + std::pow(static_cast<double>(g_iTargetNumNeighbours + 1) / static_cast<double>(neighbourList.GetSize() + 1), 1.0 / 3.0));
+            neighbourList.Clear();
+            octree->FindNeighbours(&neighbourList, particle, 2.0f * particle->h);
+        }
+        particle->num_neighbours = neighbourList.GetSize();
+
+        for (List<Particle3D>::Iterator iter = neighbourList.GetIterator(); !iter.Done(); iter.Next())
+        {
+            Particle3D* neighbour = iter.GetValue();
+            POS_TYPE fW_ij_hi = W(neighbour->fSeparation, particle->h);
+            POS_TYPE fdWdq_ij_hi = dWdq(neighbour->fSeparation, particle->h);
+
+            particle->density += neighbour->mass * fW_ij_hi; // non-symmetrized density
+        }
+    }
+}
+
 void CalculateGasAcceleration(Particle3D** aParticles, int iNumParticles, OctreeNode* octreeGas, int iBin)
 {
     List<Particle3D> neighbourList = List<Particle3D>();
@@ -333,6 +364,21 @@ void WriteStepVelocities(std::ofstream* out, Particle3D** aParticles, int iNumPa
     *out << std::endl;
 }
 
+void WriteStepDensities(std::ofstream* out, Particle3D** aParticles, int iNumParticles)
+{
+    if (iNumParticles == 0)
+    {
+        return;
+    }
+
+    *out << aParticles[0]->density;
+    for (int i = 1; i < iNumParticles; i++)
+    {
+        *out << "," << aParticles[i]->density;
+    }
+    *out << std::endl;
+}
+
 int main()
 {
     LoadFilenames(g_sFilenameFile);
@@ -348,14 +394,6 @@ int main()
 
     std::ofstream outDark(g_sPosFilenameDark, std::ofstream::out);
     std::ofstream outGas(g_sPosFilenameGas, std::ofstream::out);
-
-    std::ofstream outDarkVel;
-    std::ofstream outGasVel;
-    if (g_bWriteVelocity)
-    {
-        outDarkVel = std::ofstream(g_sVelFilenameDark, std::ofstream::out);
-        outGasVel = std::ofstream(g_sVelFilenameGas, std::ofstream::out);
-    }
 
     for (int step = 0; step < g_iNumSteps; step++)
     {
@@ -450,13 +488,15 @@ int main()
         // write data
         std::thread tWriteDark(WriteStepPositions, &outDark, particlesDark, g_iNumParticlesDark, false);
         std::thread tWriteGas(WriteStepPositions, &outGas, particlesGas, g_iNumParticlesGas, true);
-        
-        std::thread tWriteDarkVel;
-        std::thread tWriteGasVel;
-        if (g_bWriteVelocity)
+
+        // calculate the final density estimates
+        if (step == g_iNumSteps - 1 && g_bWriteDensity)
         {
-            tWriteDarkVel = std::thread(WriteStepVelocities, &outDarkVel, particlesDark, g_iNumParticlesDark);
-            tWriteGasVel = std::thread(WriteStepVelocities, &outGasVel, particlesGas, g_iNumParticlesGas);
+            // note: making the DM neighbour tolerance very high for now since we don't really need DM density
+            std::thread tWriteDarkDensity(CalculateDensityOnly, particlesDark, octreeDark, g_iNumParticlesDark, g_iTargetNumNeighbours);
+            std::thread tWriteGasDensity(CalculateDensityOnly, particlesGas, octreeGas, g_iNumParticlesGas, g_iNeighbourTolerance);
+            tWriteDarkDensity.join();
+            tWriteGasDensity.join();
         }
 
         octreeDark->Delete();
@@ -466,12 +506,6 @@ int main()
 
         tWriteDark.join();
         tWriteGas.join();
-
-        if (g_bWriteVelocity)
-        {
-            tWriteDarkVel.join();
-            tWriteGasVel.join();
-        }
 
         // progress
         std::cout << "[" << step + 1 << "/" << g_iNumSteps << "]";
@@ -485,10 +519,34 @@ int main()
     outDark.close();
     outGas.close();
 
+    // write final velocity
     if (g_bWriteVelocity)
     {
+        std::ofstream outDarkVel(g_sVelFilenameDark, std::ofstream::out);
+        std::ofstream outGasVel(g_sVelFilenameGas, std::ofstream::out);
+
+        std::thread tWriteDarkVel(WriteStepVelocities, &outDarkVel, particlesDark, g_iNumParticlesDark);
+        std::thread tWriteGasVel(WriteStepVelocities, &outGasVel, particlesGas, g_iNumParticlesGas);
+        tWriteDarkVel.join();
+        tWriteGasVel.join();
+        
         outDarkVel.close();
         outGasVel.close();
+    }
+
+    // write final density
+    if (g_bWriteDensity)
+    {
+        std::ofstream outDarkDensity(g_sDensityFilenameDark, std::ofstream::out);
+        std::ofstream outGasDensity(g_sDensityFilenameGas, std::ofstream::out);
+
+        std::thread tWriteDarkDensity(WriteStepDensities, &outDarkDensity, particlesDark, g_iNumParticlesDark);
+        std::thread tWriteGasDensity(WriteStepDensities, &outGasDensity, particlesGas, g_iNumParticlesGas);
+        tWriteDarkDensity.join();
+        tWriteGasDensity.join();
+
+        outDarkDensity.close();
+        outGasDensity.close();
     }
 
     for (int i = 0; i < g_iNumParticlesDark; i++)
