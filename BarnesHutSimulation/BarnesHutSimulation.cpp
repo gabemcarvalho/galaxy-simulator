@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "Globals.h"
+#include "Config.h"
 #include "Vector2.h"
 #include "Particle.h"
 #include "Quadtree.h"
@@ -164,8 +165,8 @@ void CalculateGasAcceleration(Particle3D** aParticles, int iNumParticles, Octree
                 //fViscFactor = fMu_ij * (-alpha * fSoundSpeed + beta * fMu_ij) / (particle->density + neighbour->density) * (particle->shear_factor + neighbour->shear_factor) / 2.0;
             }
 
-            particle->acceleration_sph -= dWdr_hi * neighbour->mass * (particle->f * g_fA / particle->density + fViscFactor / 2.0f); // assuming isothermal ideal gas
-            particle->acceleration_sph -= dWdr_hj * neighbour->mass * (neighbour->f * g_fA / neighbour->density + fViscFactor / 2.0f);
+            particle->acceleration_sph -= dWdr_hi * neighbour->mass * (particle->f * g_fA * std::pow(particle->density, g_fAdiabaticIndex - 2.0) + fViscFactor / 2.0f); // assuming isothermal ideal gas
+            particle->acceleration_sph -= dWdr_hj * neighbour->mass * (neighbour->f * g_fA * std::pow(neighbour->density, g_fAdiabaticIndex - 2.0) + fViscFactor / 2.0f);
         }
 
         // C_courant = 0.3
@@ -334,6 +335,9 @@ void WriteStepVelocities(std::ofstream* out, Particle3D** aParticles, int iNumPa
 
 int main()
 {
+    LoadFilenames(g_sFilenameFile);
+    LoadConfig(g_sConfigFile.c_str());
+
     srand(g_iSeed);
 
     Particle3D** particlesDark = g_iNumParticlesDark ? new Particle3D* [g_iNumParticlesDark] : 0;

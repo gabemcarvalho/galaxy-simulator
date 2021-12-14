@@ -59,21 +59,21 @@ def generate_pointcloud_xyzw(data, directory):
 
 def main():
     
-    dataDM = np.loadtxt('output/dataDM.np', float, delimiter=',')
-    dataGas = np.loadtxt('output/dataGas.np', float, delimiter=',')
+    dataDM = np.loadtxt('../output/dataDM.np', float, delimiter=',')
+    dataGas = np.loadtxt('../output/dataGas.np', float, delimiter=',')
     
-    if dataDM.shape[0] > 0: generate_fits(dataDM, 'output/dataDM.fits', 3)
-    if dataGas.shape[0] > 0: generate_fits(dataGas, 'output/dataGas.fits', 4)
+    if dataDM.shape[0] > 0: generate_fits(dataDM, '../output/dataDM.fits', 3)
+    if dataGas.shape[0] > 0: generate_fits(dataGas, '../output/dataGas.fits', 4)
     
-    if dataDM.shape[0] > 0: generate_pointcloud_xyz(dataDM, 'output/pointcloudDM/')
-    if dataGas.shape[0] > 0: generate_pointcloud_xyzw(dataGas, 'output/pointcloudGas/')            
+    if dataDM.shape[0] > 0: generate_pointcloud_xyz(dataDM, '../output/pointcloudDM/')
+    if dataGas.shape[0] > 0: generate_pointcloud_xyzw(dataGas, '../output/pointcloudGas/')            
 
     if True:
-        dataDMVel = np.loadtxt('output/dataDM_velocity.np', float, delimiter=',')
-        dataGasVel = np.loadtxt('output/dataGas_velocity.np', float, delimiter=',')
+        dataDMVel = np.loadtxt('../output/dataDM_velocity.np', float, delimiter=',')
+        dataGasVel = np.loadtxt('../output/dataGas_velocity.np', float, delimiter=',')
         
-        if dataDMVel.shape[0] > 0: generate_fits(dataDMVel, 'output/dataDM_velocity.fits', 3)
-        if dataGasVel.shape[0] > 0: generate_fits(dataGasVel, 'output/dataGas_velocity.fits', 3)
+        if dataDMVel.shape[0] > 0: generate_fits(dataDMVel, '../output/dataDM_velocity.fits', 3)
+        if dataGasVel.shape[0] > 0: generate_fits(dataGasVel, '../output/dataGas_velocity.fits', 3)
 
 if __name__ == '__main__':
     main()
