@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cmath>
 #include "Globals.h"
 #include "Vector2.h"
@@ -166,3 +168,12 @@ struct OctreeNode
         }
     }
 };
+
+// assumes first particle is already in octree
+void ConstructOctree(OctreeNode* octree, Particle3D** aParticles, int iNumParticles)
+{
+    for (int i = 1; i < iNumParticles; i++)
+    {
+        octree->PlaceParticle(aParticles[i]);
+    }
+}

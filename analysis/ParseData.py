@@ -97,7 +97,7 @@ def main():
     if data_exists(output_dir + filename + '.np'):
         data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
         generate_fits(data, output_dir + filename + '.fits', 4)
-        generate_pointcloud_xyz(data, output_dir + 'pointcloudGas/')
+        generate_pointcloud_xyzw(data, output_dir + 'pointcloudGas/')
                
     # velocity
     filename = 'DarkMatter_velocity'

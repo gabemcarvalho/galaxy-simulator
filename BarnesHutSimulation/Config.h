@@ -177,6 +177,11 @@ void LoadConfig(const char* sFilename)
 			g_fViscositySoftening = std::atof(value.c_str());
 			std::cout << "Viscosity Softening Distance: " << g_fViscositySoftening << std::endl;
 		}
+		else if (key.compare("UseViscosity") == 0)
+		{
+			g_bUseViscosity = value.compare("true") == 0;
+			std::cout << "Use Viscosity: " << g_bUseViscosity << std::endl;
+		}
 		else if (key.compare("TargetNumNeighbours") == 0)
 		{
 			g_iTargetNumNeighbours = std::atoi(value.c_str());
@@ -191,6 +196,26 @@ void LoadConfig(const char* sFilename)
 		{
 			g_iSeed = std::atoi(value.c_str());
 			std::cout << "Random Seed: " << g_iSeed << std::endl;
+		}
+		else if (key.compare("UseToyStarModel") == 0)
+		{
+			g_bUseToyStarModel = value.compare("true") == 0;
+			std::cout << "Use Toy Star Model: " << g_bUseToyStarModel << std::endl;
+		}
+		else if (key.compare("UseToyStarFluidEquation") == 0)
+		{
+			g_bUseToyStarFluidEquation = value.compare("true") == 0;
+			std::cout << "Use Toy Star Fluid Equation: " << g_bUseToyStarFluidEquation << std::endl;
+		}
+		else if (key.compare("ToyStarLambda") == 0)
+		{
+			g_fToyStarLambda = std::atof(value.c_str());
+			std::cout << "Toy Star Lambda: " << g_fToyStarLambda << std::endl;
+		}
+		else if (key.compare("ToyStarDamping") == 0)
+		{
+			g_fToyStarDamping = std::atof(value.c_str());
+			std::cout << "Toy Star Damping: " << g_fToyStarDamping << std::endl;
 		}
 	}
 

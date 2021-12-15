@@ -47,5 +47,17 @@
     <ClInclude Include="Config.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Output.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulateBase.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SPH.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulateToyStar.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
