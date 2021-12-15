@@ -73,7 +73,7 @@ void CalculateDensityEstimate(Particle3D** aParticles, OctreeNode* octree, int i
         }
 
         particle->density = particle->mass * W(0, particle->h); // density should include the particle itself
-        particle->drhodh = 0;
+        particle->drhodh = -particle->mass * dWdh(0, particle->h);
         POS_TYPE fVelocity_div = 0;
         Vector3 vVelocity_curl = Vector3(0, 0, 0);
 

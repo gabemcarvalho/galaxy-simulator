@@ -46,16 +46,18 @@ const double FLOAT_RAND_MAX = static_cast<double>(RAND_MAX);
 const char* g_sFilenameFile = "../config/filenames.config";
 std::string g_sConfigFile = "../config/default.config";
 
-std::string g_sPosFilenameDark = "../output/dataDM.np";
-std::string g_sPosFilenameGas = "../output/dataGas.np";
+std::string g_sPosFilenameDark = "../output/DarkMatter_position.np";
+std::string g_sPosFilenameGas = "../output/Gas_position.np";
+std::string g_sFinalPosFilenameDark = "../output/DarkMatter_position_final.np";
+std::string g_sFinalPosFilenameGas = "../output/Gas_position_final.np";
 
 const bool g_bWriteVelocity = true;
-std::string g_sVelFilenameDark = "../output/dataDM_velocity.np";
-std::string g_sVelFilenameGas = "../output/dataGas_velocity.np";
+std::string g_sVelFilenameDark = "../output/DarkMatter_velocity.np";
+std::string g_sVelFilenameGas = "../output/Gas_velocity.np";
 
 const bool g_bWriteDensity = true;
-std::string g_sDensityFilenameDark = "../output/dataDM_density.np";
-std::string g_sDensityFilenameGas = "../output/dataGas_density.np";
+std::string g_sDensityFilenameDark = "../output/DarkMatter_density.np";
+std::string g_sDensityFilenameGas = "../output/Gas_density.np";
 
 
 inline float frand()

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <random>
 #include "Vector2.h"
 #include "Vector3.h"
 #include "Particle.h"
@@ -67,6 +68,29 @@ void GenerateDistributionUniformSphere(Particle3D** aParticles, int iNumParticle
         fTheta += PI / 2.0f;
         Vector3 vVel(fR * std::cos(fTheta), fR * std::sin(fTheta), 0.0);
         // vVel += Vector3(frand() - 0.5f, frand() - 0.5f, 0.0f) * fEdgeSpeed * 0.2f;
+
+        aParticles[i] = new Particle3D(vPos, vVel, fParticleMass, fH);
+    }
+}
+
+void GenerateDistribution3DNormal(Particle3D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fRadius, POS_TYPE fEdgeSpeed, POS_TYPE fH)
+{
+    if (iNumParticles == 0)
+    {
+        return;
+    }
+
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0.0, 1.0);
+
+    for (int i = 0; i < iNumParticles; i++)
+    {
+        POS_TYPE x = distribution(generator);
+        POS_TYPE y = distribution(generator);
+        POS_TYPE z = distribution(generator);
+
+        Vector3 vPos(x, y, z);
+        Vector3 vVel(0.0, 0.0, 0.0);
 
         aParticles[i] = new Particle3D(vPos, vVel, fParticleMass, fH);
     }

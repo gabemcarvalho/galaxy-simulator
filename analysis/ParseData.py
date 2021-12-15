@@ -98,7 +98,18 @@ def main():
         data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
         generate_fits(data, output_dir + filename + '.fits', 4)
         generate_pointcloud_xyzw(data, output_dir + 'pointcloudGas/')
-               
+    
+    # final position
+    filename = 'DarkMatter_position_final'
+    if data_exists(output_dir + filename + '.np'):
+        data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
+        generate_fits_singlestep(data, output_dir + filename + '.fits', 3)
+    
+    filename = 'Gas_position_final'
+    if data_exists(output_dir + filename + '.np'):
+        data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
+        generate_fits_singlestep(data, output_dir + filename + '.fits', 4)
+    
     # velocity
     filename = 'DarkMatter_velocity'
     if data_exists(output_dir + filename + '.np'):

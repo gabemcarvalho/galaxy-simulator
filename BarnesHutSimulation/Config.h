@@ -37,6 +37,10 @@ void LoadFilenames(const char* sFilename)
 		{
 			g_sPosFilenameDark = value;
 		}
+		else if (key.compare("darkmatter_position_final") == 0)
+		{
+			g_sFinalPosFilenameDark = value;
+		}
 		else if (key.compare("darkmatter_velocity") == 0)
 		{
 			g_sVelFilenameDark = value;
@@ -48,6 +52,10 @@ void LoadFilenames(const char* sFilename)
 		else if (key.compare("gas_position") == 0)
 		{
 			g_sPosFilenameGas = value;
+		}
+		else if (key.compare("gas_position_final") == 0)
+		{
+			g_sFinalPosFilenameGas = value;
 		}
 		else if (key.compare("gas_velocity") == 0)
 		{

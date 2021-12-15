@@ -14,6 +14,33 @@
 #include "Output.h"
 #include "SPH.h"
 
+POS_TYPE GaussianKernel(POS_TYPE r, POS_TYPE h)
+{
+    return std::pow(h * std::sqrt(PI), -3) * std::exp(-r * r / (h * h));
+}
+
+Vector3 GradGaussianKernel(Vector3 vSep, POS_TYPE r, POS_TYPE h)
+{
+    POS_TYPE n = -2.0 * std::exp(-r * r / (h * h)) / std::pow(h, 5) / std::pow(PI, 3.0/2.0);
+    return vSep * n;
+}
+
+// note: goes from radius 0 to 2h
+POS_TYPE ToySplineKernel(POS_TYPE r, POS_TYPE h)
+{
+    POS_TYPE q = r / h;
+    if (q < 1.0)
+    {
+        return 1.0 / 4.0 / PI / (h * h * h) * (std::pow(2.0 - q, 3) - 4.0 * std::pow(1.0 - q, 3));
+    }
+    else if (q < 2.0)
+    {
+        return 1.0 / 4.0 / PI / (h * h * h) * std::pow(2.0 - q, 3);
+    }
+
+    return 0.0;
+}
+
 void CalculateToyStarGravity(Particle3D** aParticles, int iNumParticles, int iBin)
 {
     for (int i = 0; i < iNumParticles; i++)
@@ -24,7 +51,8 @@ void CalculateToyStarGravity(Particle3D** aParticles, int iNumParticles, int iBi
         }
 
         // note: resets acceleration
-        aParticles[i]->acceleration_grav = aParticles[i]->position * (-g_fToyStarLambda);
+        aParticles[i]->acceleration_grav *= 0.0;
+        aParticles[i]->acceleration_grav -= aParticles[i]->position * g_fToyStarLambda;
         aParticles[i]->acceleration_grav -= aParticles[i]->velocity * g_fToyStarDamping;
     }
 }
@@ -46,7 +74,29 @@ void CalculateDensityDumbMethod(Particle3D** aParticles, OctreeNode* octree, int
             Vector3 vR_ij = particle->position - neighbour->position;
             POS_TYPE fR_ij = std::sqrt(vR_ij.lengthSquared());
             
-            particle->density += neighbour->mass * W(fR_ij, particle->h);
+            particle->density += neighbour->mass * GaussianKernel(fR_ij, particle->h);
+        }
+    }
+}
+
+void CalculateDensityGaussian(Particle3D** aParticles, int iNumParticles)
+{
+    for (int i = 0; i < iNumParticles; i++)
+    {
+        Particle3D* particle = aParticles[i];
+
+        particle->density = particle->mass * W(0, particle->h); // density should include the particle itself
+
+        for (int j = 0; j < iNumParticles; j++)
+        {
+            if (j == i) continue;
+
+            Particle3D* neighbour = aParticles[j];
+
+            Vector3 vR_ij = particle->position - neighbour->position;
+            POS_TYPE fR_ij = std::sqrt(vR_ij.lengthSquared());
+
+            particle->density += neighbour->mass * GaussianKernel(fR_ij, particle->h);
         }
     }
 }
@@ -65,7 +115,7 @@ void CalculateToyStarGasAcceleration(Particle3D** aParticles, int iNumParticles,
         }
 
         particle->acceleration_sph *= 0;
-
+        
         neighbourList.Clear();
         octreeGas->FindNeighbours(&neighbourList, particle, 2.0f * particle->h);
 
@@ -85,7 +135,8 @@ void CalculateToyStarGasAcceleration(Particle3D** aParticles, int iNumParticles,
 void RunToyStarSimulation()
 {
     Particle3D** particles = g_iNumParticlesGas ? new Particle3D * [g_iNumParticlesGas] : 0;
-    GenerateDistributionUniformSphere(particles, g_iNumParticlesGas, g_fGasParticleMass, g_fCloudRadius, g_fMaxStartSpeed, g_fInitialH);
+    // GenerateDistributionUniformSphere(particles, g_iNumParticlesGas, g_fGasParticleMass, g_fCloudRadius, g_fMaxStartSpeed, g_fInitialH);
+    GenerateDistribution3DNormal(particles, g_iNumParticlesGas, g_fGasParticleMass, g_fCloudRadius, g_fMaxStartSpeed, g_fInitialH);
 
     std::ofstream outGas(g_sPosFilenameGas, std::ofstream::out);
 
@@ -104,7 +155,7 @@ void RunToyStarSimulation()
         if (g_bUseToyStarFluidEquation)
         {
             CalculateToyStarGravity(particles, g_iNumParticlesGas, 0);
-            CalculateDensityOnly(particles, octree, g_iNumParticlesGas, g_iNeighbourTolerance);
+            CalculateDensityDumbMethod(particles, octree, g_iNumParticlesGas);
             CalculateToyStarGasAcceleration(particles, g_iNumParticlesGas, octree, 0);
 
             // kick last velocity in current bin or smaller for whole step (and save this velocity as v_last)
@@ -169,7 +220,8 @@ void RunToyStarSimulation()
         // calculate the final density estimates
         if (step == g_iNumSteps - 1 && g_bWriteDensity)
         {
-            CalculateDensityOnly(particles, octree, g_iNumParticlesGas, g_iNeighbourTolerance);
+            // CalculateDensityOnly(particles, octree, g_iNumParticlesGas, g_iNeighbourTolerance);
+            CalculateDensityGaussian(particles, g_iNumParticlesGas);
         }
 
         octree->Delete();
@@ -185,6 +237,11 @@ void RunToyStarSimulation()
     }
 
     outGas.close();
+
+    // write final position
+    std::ofstream outGasFinalPos(g_sFinalPosFilenameGas, std::ofstream::out);
+    WriteStepPositions(&outGasFinalPos, particles, g_iNumParticlesGas, true);
+    outGasFinalPos.close();
 
     // write final velocity
     if (g_bWriteVelocity)
