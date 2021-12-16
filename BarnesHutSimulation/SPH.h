@@ -210,7 +210,21 @@ void CalculateGasAcceleration(Particle3D** aParticles, int iNumParticles, Octree
     }
 }
 
-void CalculateGravityAcceleration(Particle3D** aParticles, int iNumParticles, OctreeNode* octree1, OctreeNode* octree2, int iBin)
+void CalculateGravityAcceleration(Particle3D** aParticles, int iNumParticles, OctreeNode* octree, int iBin)
+{
+    for (int i = 0; i < iNumParticles; i++)
+    {
+        if (aParticles[i]->step_bin < iBin)
+        {
+            continue;
+        }
+
+        // note: resets acceleration
+        aParticles[i]->acceleration_grav = octree->CalculateGravityOnParticle(aParticles[i]);
+    }
+}
+
+void CalculateGravityAccelerationDouble(Particle3D** aParticles, int iNumParticles, OctreeNode* octree1, OctreeNode* octree2, int iBin)
 {
     for (int i = 0; i < iNumParticles; i++)
     {

@@ -4,6 +4,9 @@
 #include <cmath>
 #include <string>
 
+int g_iSeed = 1;
+const double FLOAT_RAND_MAX = static_cast<double>(RAND_MAX);
+
 int g_iNumParticlesDark = 256;
 int g_iNumParticlesGas = 0;
 
@@ -40,8 +43,12 @@ bool g_bUseToyStarFluidEquation = false;
 double g_fToyStarLambda = 62.38;
 double g_fToyStarDamping = 1.0;
 
-int g_iSeed = 1;
-const double FLOAT_RAND_MAX = static_cast<double>(RAND_MAX);
+bool g_bUseSellwoodModel = false;
+double g_fSellwoodRMSVerticalThickness = 0.05;
+double g_fSellwoodTruncationRadius = 5.0;
+double g_fToomreQ = 1.5;
+double g_fSellwoodV0 = 0.7;
+double g_fSellwoodCoreRadius = 30.0;
 
 const char* g_sFilenameFile = "../config/filenames.config";
 std::string g_sConfigFile = "../config/default.config";

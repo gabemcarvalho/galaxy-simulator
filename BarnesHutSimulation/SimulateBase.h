@@ -24,6 +24,8 @@ void RunBaseSimulation()
 
     std::ofstream outDark(g_sPosFilenameDark, std::ofstream::out);
     std::ofstream outGas(g_sPosFilenameGas, std::ofstream::out);
+    WriteStepPositions(&outDark, particlesDark, g_iNumParticlesDark, true);
+    WriteStepPositions(&outGas, particlesGas, g_iNumParticlesGas, true);
 
     for (int step = 0; step < g_iNumSteps; step++)
     {
@@ -49,8 +51,8 @@ void RunBaseSimulation()
         tGas.join();
 
         // gravity get updated by itself
-        tDark = std::thread(CalculateGravityAcceleration, particlesDark, g_iNumParticlesDark, octreeDark, octreeGas, 0);
-        tGas = std::thread(CalculateGravityAcceleration, particlesGas, g_iNumParticlesGas, octreeDark, octreeGas, 0);
+        tDark = std::thread(CalculateGravityAccelerationDouble, particlesDark, g_iNumParticlesDark, octreeDark, octreeGas, 0);
+        tGas = std::thread(CalculateGravityAccelerationDouble, particlesGas, g_iNumParticlesGas, octreeDark, octreeGas, 0);
 
         tDark.join(); // gravity
         tGas.join(); // gravity
@@ -74,7 +76,7 @@ void RunBaseSimulation()
             // calculate acceleration in current bin or smaller
             CalculateDensityEstimate(particlesGas, octreeGas, g_iNumParticlesGas, current_bin);
             CalculateGasAcceleration(particlesGas, g_iNumParticlesGas, octreeGas, current_bin);
-            // CalculateGravityAcceleration(particlesGas, g_iNumParticlesGas, octreeDark, octreeGasSub, current_bin);
+            // CalculateGravityAccelerationDouble(particlesGas, g_iNumParticlesGas, octreeDark, octreeGasSub, current_bin);
 
             //octreeGasSub->Delete();
             //delete octreeGasSub;

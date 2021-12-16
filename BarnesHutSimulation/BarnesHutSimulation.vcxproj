@@ -151,6 +151,7 @@
     <ClInclude Include="LinkedList.h" />
     <ClInclude Include="Quadtree.h" />
     <ClInclude Include="SimulateBase.h" />
+    <ClInclude Include="SimulateSellwoodGalaxy.h" />
     <ClInclude Include="SimulateToyStar.h" />
     <ClInclude Include="SPH.h" />
     <ClInclude Include="Vector2.h" />

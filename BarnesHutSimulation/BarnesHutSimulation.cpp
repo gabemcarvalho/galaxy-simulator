@@ -2,6 +2,7 @@
 #include "Config.h"
 #include "SimulateBase.h"
 #include "SimulateToyStar.h"
+#include "SimulateSellwoodGalaxy.h"
 
 int main()
 {
@@ -13,6 +14,10 @@ int main()
     if (g_bUseToyStarModel)
     {
         RunToyStarSimulation();
+    }
+    else if (g_bUseSellwoodModel)
+    {
+        RunSellwoodGalaxySimulation();
     }
     else
     {

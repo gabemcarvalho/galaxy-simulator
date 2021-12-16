@@ -73,7 +73,7 @@ void GenerateDistributionUniformSphere(Particle3D** aParticles, int iNumParticle
     }
 }
 
-void GenerateDistribution3DNormal(Particle3D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fRadius, POS_TYPE fEdgeSpeed, POS_TYPE fH)
+void GenerateDistribution3DNormal(Particle3D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fH)
 {
     if (iNumParticles == 0)
     {
@@ -96,7 +96,7 @@ void GenerateDistribution3DNormal(Particle3D** aParticles, int iNumParticles, fl
     }
 }
 
-void GenerateDistributionUniformCube(Particle3D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fRadius, POS_TYPE, POS_TYPE fH)
+void GenerateDistributionUniformCube(Particle3D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fRadius, POS_TYPE fEdgeSpeed, POS_TYPE fH)
 {
     if (iNumParticles == 0)
     {
@@ -110,6 +110,47 @@ void GenerateDistributionUniformCube(Particle3D** aParticles, int iNumParticles,
         POS_TYPE fZ = (1.0f - 2.0f * frand()) * fRadius;
         Vector3 vPos(fX, fY, fZ);
         Vector3 vVel(0.0, 0.0, 0.0);
+
+        aParticles[i] = new Particle3D(vPos, vVel, fParticleMass, fH);
+    }
+}
+
+void GenerateDistributionSellwoodDisk(Particle3D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fH, POS_TYPE fRMSVerticalThickness, POS_TYPE fTruncationRadius)
+{
+    if (iNumParticles == 0)
+    {
+        return;
+    }
+
+    std::default_random_engine generator;
+    std::normal_distribution<double> verticalDistribution(0.0, fRMSVerticalThickness);
+    
+    POS_TYPE fRadialDispersion = 0.1111111; // radial dispersion is always the same in our units
+    std::normal_distribution<double> radialVelocityDispersion(0.0, fRadialDispersion);
+
+    for (int i = 0; i < iNumParticles; i++)
+    {
+        POS_TYPE fR = 1.0;
+        do
+        {
+            fR = std::sqrt(1.0 / std::pow(1.0 - frand(), 2) - 1.0);
+        } while (fR > fTruncationRadius);
+
+        POS_TYPE fTheta = frand() * 2.0f * PI;
+
+        POS_TYPE fZ = verticalDistribution(generator);
+        
+        Vector3 vPos(fR * std::cos(fTheta), fR * std::sin(fTheta), fZ);
+        
+        POS_TYPE fRadialVelocity = radialVelocityDispersion(generator);
+        Vector3 vVel(fRadialVelocity * std::cos(fTheta), fRadialVelocity * std::sin(fTheta), 0.0);
+
+        fTheta += PI / 2.0f; // direction of rotation
+        POS_TYPE fSurfaceDensity = 1.0 / (2.0 * PI) * std::pow(1.0 + fR * fR, -3.0/2.0);
+        //POS_TYPE fEta = 1.68 * fSurfaceDensity * g_fToomreQ / fRadialDispersion;
+        //POS_TYPE fCircularVelocity = (-fR + std::sqrt(fR * fR + 4.0 * fEta)) / 2.0;
+        POS_TYPE fCircularVelocity = 3.36 * fSurfaceDensity * g_fToomreQ / (std::sqrt(2.0) * fRadialDispersion);
+        vVel += Vector3(fCircularVelocity * std::cos(fTheta), fCircularVelocity * std::sin(fTheta), 0.0);
 
         aParticles[i] = new Particle3D(vPos, vVel, fParticleMass, fH);
     }

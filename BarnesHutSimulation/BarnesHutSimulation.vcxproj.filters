@@ -59,5 +59,8 @@
     <ClInclude Include="SimulateToyStar.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="SimulateSellwoodGalaxy.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

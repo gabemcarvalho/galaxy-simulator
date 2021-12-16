@@ -205,6 +205,7 @@ void LoadConfig(const char* sFilename)
 			g_iSeed = std::atoi(value.c_str());
 			std::cout << "Random Seed: " << g_iSeed << std::endl;
 		}
+		// Toy Star
 		else if (key.compare("UseToyStarModel") == 0)
 		{
 			g_bUseToyStarModel = value.compare("true") == 0;
@@ -224,6 +225,37 @@ void LoadConfig(const char* sFilename)
 		{
 			g_fToyStarDamping = std::atof(value.c_str());
 			std::cout << "Toy Star Damping: " << g_fToyStarDamping << std::endl;
+		}
+		// Sellwood Galaxy
+		else if (key.compare("UseSellwoodModel") == 0)
+		{
+			g_bUseSellwoodModel = value.compare("true") == 0;
+			std::cout << "Use Sellwood Model: " << g_bUseSellwoodModel << std::endl;
+		}
+		else if (key.compare("SellwoodRMSVerticalThickness") == 0)
+		{
+			g_fSellwoodRMSVerticalThickness = std::atof(value.c_str());
+			std::cout << "Sellwood RMS Vertical Thickness: " << g_fSellwoodRMSVerticalThickness << std::endl;
+		}
+		else if (key.compare("SellwoodTruncationRadius") == 0)
+		{
+			g_fSellwoodTruncationRadius = std::atof(value.c_str());
+			std::cout << "Sellwood Truncation Radius: " << g_fSellwoodTruncationRadius << std::endl;
+		}
+		else if (key.compare("ToomreQ") == 0)
+		{
+			g_fToomreQ = std::atof(value.c_str());
+			std::cout << "Toomre Q: " << g_fToomreQ << std::endl;
+		}
+		else if (key.compare("SellwoodV0") == 0)
+		{
+			g_fSellwoodV0 = std::atof(value.c_str());
+			std::cout << "Sellwood V0: " << g_fSellwoodV0 << std::endl;
+		}
+		else if (key.compare("SellwoodCoreRadius") == 0)
+		{
+			g_fSellwoodCoreRadius = std::atof(value.c_str());
+			std::cout << "Sellwood Core Radius: " << g_fSellwoodCoreRadius << std::endl;
 		}
 	}
 

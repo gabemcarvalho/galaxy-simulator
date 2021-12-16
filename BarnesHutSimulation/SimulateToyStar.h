@@ -135,10 +135,10 @@ void CalculateToyStarGasAcceleration(Particle3D** aParticles, int iNumParticles,
 void RunToyStarSimulation()
 {
     Particle3D** particles = g_iNumParticlesGas ? new Particle3D * [g_iNumParticlesGas] : 0;
-    // GenerateDistributionUniformSphere(particles, g_iNumParticlesGas, g_fGasParticleMass, g_fCloudRadius, g_fMaxStartSpeed, g_fInitialH);
-    GenerateDistribution3DNormal(particles, g_iNumParticlesGas, g_fGasParticleMass, g_fCloudRadius, g_fMaxStartSpeed, g_fInitialH);
+    GenerateDistribution3DNormal(particles, g_iNumParticlesGas, g_fGasParticleMass, g_fInitialH);
 
     std::ofstream outGas(g_sPosFilenameGas, std::ofstream::out);
+    WriteStepPositions(&outGas, particles, g_iNumParticlesGas, true);
 
     for (int step = 0; step < g_iNumSteps; step++)
     {
@@ -229,10 +229,6 @@ void RunToyStarSimulation()
 
         // progress
         std::cout << "[" << step + 1 << "/" << g_iNumSteps << "]";
-        if (step == 68)
-        {
-            std::cout << " nice!";
-        }
         std::cout << std::endl;
     }
 
