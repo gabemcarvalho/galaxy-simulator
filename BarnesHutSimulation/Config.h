@@ -257,6 +257,26 @@ void LoadConfig(const char* sFilename)
 			g_fSellwoodCoreRadius = std::atof(value.c_str());
 			std::cout << "Sellwood Core Radius: " << g_fSellwoodCoreRadius << std::endl;
 		}
+		else if (key.compare("AccretionStartStep") == 0)
+		{
+			g_iAccretionStartStep = std::atoi(value.c_str());
+			std::cout << "Accretion Start Step: " << g_iAccretionStartStep << std::endl;
+		}
+		else if (key.compare("ParticlesAddedPerStep") == 0)
+		{
+			g_iParticlesAddedPerStep = std::atoi(value.c_str());
+			std::cout << "Particles Added Per Step: " << g_iParticlesAddedPerStep << std::endl;
+		}
+		else if (key.compare("AccretionMinRadius") == 0)
+		{
+			g_fAccretionMinRadius = std::atof(value.c_str());
+			std::cout << "Accretion Min Radius: " << g_fAccretionMinRadius << std::endl;
+		}
+		else if (key.compare("AccretionMaxRadius") == 0)
+		{
+			g_fAccretionMaxRadius = std::atof(value.c_str());
+			std::cout << "Accretion Max Radius: " << g_fAccretionMaxRadius << std::endl;
+		}
 	}
 
 	// need to claculate the particle masses after loading config (this should probably be its own function, since it will eventually need to handle accretion parameters)

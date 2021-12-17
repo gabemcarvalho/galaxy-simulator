@@ -30,13 +30,13 @@ struct Particle3D
 {
     Particle3D() : 
         position(), velocity(), velocity_last(),
-        mass(0), h(0), step_bin(0), target_bin(0) {}
+        mass(0), h(0), step_bin(0), target_bin(0), bActive(true) {}
     Particle3D(Vector3& vPosition, Vector3& vVelocity, float fMass, POS_TYPE fH) : 
         position(vPosition), velocity(vVelocity), velocity_last(vVelocity),
-        mass(fMass), h(fH), step_bin(0), target_bin(0) {}
+        mass(fMass), h(fH), step_bin(0), target_bin(0), bActive(true) {}
     Particle3D(POS_TYPE fX, POS_TYPE fY, POS_TYPE fZ, POS_TYPE fVx, POS_TYPE fVy, POS_TYPE fVz, float fMass, POS_TYPE fH) : 
         position(fX, fY, fZ), velocity(fVx, fVy, fVz), velocity_last(fVx, fVy, fVz),
-        mass(fMass), h(fH), step_bin(0), target_bin(0) {}
+        mass(fMass), h(fH), step_bin(0), target_bin(0), bActive(true) {}
 
     float mass;
     Vector3 position;
@@ -59,6 +59,8 @@ struct Particle3D
     Vector3 velocity_last;
     int step_bin;
     int target_bin;
+
+    bool bActive;
 
     Particle3D* next;
 

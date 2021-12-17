@@ -118,8 +118,8 @@ void RunBaseSimulation()
         tHUpdate.join();
 
         // write data
-        std::thread tWriteDark(WriteStepPositions, &outDark, particlesDark, g_iNumParticlesDark, false);
-        std::thread tWriteGas(WriteStepPositions, &outGas, particlesGas, g_iNumParticlesGas, true);
+        std::thread tWriteDark(WriteStepPositions, &outDark, particlesDark, g_iNumParticlesDark, false, false);
+        std::thread tWriteGas(WriteStepPositions, &outGas, particlesGas, g_iNumParticlesGas, true, false);
 
         // calculate the final density estimates
         if (step == g_iNumSteps - 1 && g_bWriteDensity)

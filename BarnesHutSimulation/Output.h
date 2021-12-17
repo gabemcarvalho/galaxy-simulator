@@ -3,7 +3,7 @@
 #include <fstream>
 #include "Particle.h"
 
-void WriteStepPositions(std::ofstream* out, Particle3D** aParticles, int iNumParticles, bool bWriteH)
+void WriteStepPositions(std::ofstream* out, Particle3D** aParticles, int iNumParticles, bool bWriteH, bool bWriteActive = false)
 {
     if (iNumParticles == 0)
     {
@@ -15,6 +15,10 @@ void WriteStepPositions(std::ofstream* out, Particle3D** aParticles, int iNumPar
     {
         *out << "," << aParticles[0]->h;
     }
+    if (bWriteActive)
+    {
+        *out << "," << aParticles[0]->bActive;
+    }
 
     for (int i = 1; i < iNumParticles; i++)
     {
@@ -22,6 +26,10 @@ void WriteStepPositions(std::ofstream* out, Particle3D** aParticles, int iNumPar
         if (bWriteH)
         {
             *out << "," << aParticles[i]->h;
+        }
+        if (bWriteActive)
+        {
+            *out << "," << aParticles[i]->bActive;
         }
     }
     *out << std::endl;

@@ -50,6 +50,11 @@ double g_fToomreQ = 1.5;
 double g_fSellwoodV0 = 0.7;
 double g_fSellwoodCoreRadius = 30.0;
 
+int g_iAccretionStartStep = 50;
+int g_iParticlesAddedPerStep = 4;
+double g_fAccretionMinRadius = 8.0;
+double g_fAccretionMaxRadius = 12.0;
+
 const char* g_sFilenameFile = "../config/filenames.config";
 std::string g_sConfigFile = "../config/default.config";
 

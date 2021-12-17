@@ -143,14 +143,19 @@ void GenerateDistributionSellwoodDisk(Particle3D** aParticles, int iNumParticles
         Vector3 vPos(fR * std::cos(fTheta), fR * std::sin(fTheta), fZ);
         
         POS_TYPE fRadialVelocity = radialVelocityDispersion(generator);
-        Vector3 vVel(fRadialVelocity * std::cos(fTheta), fRadialVelocity * std::sin(fTheta), 0.0);
+        // Vector3 vVel(fRadialVelocity * std::cos(fTheta), fRadialVelocity * std::sin(fTheta), 0.0);
+        Vector3 vVel(0.0, 0.0, 0.0);
 
         fTheta += PI / 2.0f; // direction of rotation
         POS_TYPE fSurfaceDensity = 1.0 / (2.0 * PI) * std::pow(1.0 + fR * fR, -3.0/2.0);
         //POS_TYPE fEta = 1.68 * fSurfaceDensity * g_fToomreQ / fRadialDispersion;
         //POS_TYPE fCircularVelocity = (-fR + std::sqrt(fR * fR + 4.0 * fEta)) / 2.0;
-        POS_TYPE fCircularVelocity = 3.36 * fSurfaceDensity * g_fToomreQ / (std::sqrt(2.0) * fRadialDispersion);
-        vVel += Vector3(fCircularVelocity * std::cos(fTheta), fCircularVelocity * std::sin(fTheta), 0.0);
+
+        //POS_TYPE fCircularVelocity = 3.36 * fSurfaceDensity * g_fToomreQ / (std::sqrt(2.0) * fRadialDispersion);
+
+        POS_TYPE fCircularVelocity = std::sqrt((1.0 - 1.0 / std::sqrt(1.0 + fR * fR)) / fR);
+
+        //vVel += Vector3(fCircularVelocity * std::cos(fTheta), fCircularVelocity * std::sin(fTheta), 0.0);
 
         aParticles[i] = new Particle3D(vPos, vVel, fParticleMass, fH);
     }
