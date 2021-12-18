@@ -210,68 +210,76 @@ void CalculateGasAcceleration(Particle3D** aParticles, int iNumParticles, Octree
     }
 }
 
-void CalculateGravityAcceleration(Particle3D** aParticles, int iNumParticles, OctreeNode* octree, int iBin)
+void CalculateGravityAcceleration(Particle3D** aParticles, int iNumParticles, OctreeNode* octree, int iBin, int iStartIndex)
 {
     for (int i = 0; i < iNumParticles; i++)
     {
-        if (aParticles[i]->step_bin < iBin)
+        Particle3D* particle = aParticles[iStartIndex + i];
+
+        if (particle->step_bin < iBin)
         {
             continue;
         }
 
         // note: resets acceleration
-        aParticles[i]->acceleration_grav = octree->CalculateGravityOnParticle(aParticles[i]);
+        particle->acceleration_grav = octree->CalculateGravityOnParticle(particle);
     }
 }
 
-void CalculateGravityAccelerationDouble(Particle3D** aParticles, int iNumParticles, OctreeNode* octree1, OctreeNode* octree2, int iBin)
+void CalculateGravityAccelerationDouble(Particle3D** aParticles, int iNumParticles, OctreeNode* octree1, OctreeNode* octree2, int iBin, int iStartIndex)
 {
     for (int i = 0; i < iNumParticles; i++)
     {
-        if (aParticles[i]->step_bin < iBin)
+        Particle3D* particle = aParticles[iStartIndex + i];
+
+        if (particle->step_bin < iBin)
         {
             continue;
         }
 
         // note: resets acceleration
-        aParticles[i]->acceleration_grav = octree1->CalculateGravityOnParticle(aParticles[i]);
-        aParticles[i]->acceleration_grav += octree2->CalculateGravityOnParticle(aParticles[i]);
+        particle->acceleration_grav = octree1->CalculateGravityOnParticle(particle);
+        particle->acceleration_grav += octree2->CalculateGravityOnParticle(particle);
     }
 }
 
-void Prekick(Particle3D** aParticles, int iNumParticles, POS_TYPE fDeltaTime, int iBin)
+void Prekick(Particle3D** aParticles, int iNumParticles, POS_TYPE fDeltaTime, int iBin, int iStartIndex)
 {
     for (int i = 0; i < iNumParticles; i++)
     {
-        if (aParticles[i]->step_bin < iBin)
+        Particle3D* particle = aParticles[iStartIndex + i];
+
+        if (particle->step_bin < iBin)
         {
             continue;
         }
 
-        aParticles[i]->velocity = aParticles[i]->velocity_last + (aParticles[i]->acceleration_grav + aParticles[i]->acceleration_sph) * fDeltaTime;
-        aParticles[i]->velocity_last = aParticles[i]->velocity;
+        particle->velocity = particle->velocity_last + (particle->acceleration_grav + particle->acceleration_sph) * fDeltaTime;
+        particle->velocity_last = particle->velocity;
     }
 }
 
-void Drift(Particle3D** aParticles, int iNumParticles, POS_TYPE fDeltaTime)
+void Drift(Particle3D** aParticles, int iNumParticles, POS_TYPE fDeltaTime, int iStartIndex)
 {
     for (int i = 0; i < iNumParticles; i++)
     {
-        aParticles[i]->step_position(fDeltaTime); // "drift"
+        aParticles[iStartIndex + i]->step_position(fDeltaTime); // "drift"
     }
 }
 
 // fDeltaTime should be 1/2 the pre-kick time
-void Postkick(Particle3D** aParticles, int iNumParticles, POS_TYPE fDeltaTime, int iBin)
+void Postkick(Particle3D** aParticles, int iNumParticles, POS_TYPE fDeltaTime, int iBin, int iStartIndex)
 {
     for (int i = 0; i < iNumParticles; i++)
     {
-        if (aParticles[i]->step_bin < iBin)
+        Particle3D* particle = aParticles[iStartIndex + i];
+
+        if (particle->step_bin < iBin)
         {
             continue;
         }
 
-        aParticles[i]->velocity += (aParticles[i]->acceleration_grav + aParticles[i]->acceleration_sph) * fDeltaTime;
+        particle->velocity += (particle->acceleration_grav + particle->acceleration_sph) * fDeltaTime;
     }
 }
 

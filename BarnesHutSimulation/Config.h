@@ -262,6 +262,11 @@ void LoadConfig(const char* sFilename)
 			g_iAccretionStartStep = std::atoi(value.c_str());
 			std::cout << "Accretion Start Step: " << g_iAccretionStartStep << std::endl;
 		}
+		else if (key.compare("StepsBetweenAccretion") == 0)
+		{
+			g_iStepsBetweenAccretion = std::atoi(value.c_str());
+			std::cout << "Steps Between Accretion: " << g_iStepsBetweenAccretion << std::endl;
+		}
 		else if (key.compare("ParticlesAddedPerStep") == 0)
 		{
 			g_iParticlesAddedPerStep = std::atoi(value.c_str());
@@ -276,6 +281,12 @@ void LoadConfig(const char* sFilename)
 		{
 			g_fAccretionMaxRadius = std::atof(value.c_str());
 			std::cout << "Accretion Max Radius: " << g_fAccretionMaxRadius << std::endl;
+		}
+
+		else if (key.compare("NumThreads") == 0)
+		{
+			g_iNumThreads = std::atoi(value.c_str());
+			std::cout << "Num Threads: " << g_iNumThreads << std::endl;
 		}
 	}
 

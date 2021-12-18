@@ -159,13 +159,13 @@ void RunToyStarSimulation()
             CalculateToyStarGasAcceleration(particles, g_iNumParticlesGas, octree, 0);
 
             // kick last velocity in current bin or smaller for whole step (and save this velocity as v_last)
-            Prekick(particles, g_iNumParticlesGas, g_fMaxDeltaTime, 0);
+            Prekick(particles, g_iNumParticlesGas, g_fMaxDeltaTime, 0, 0);
 
             // drift all parts for whole step
-            Drift(particles, g_iNumParticlesGas, g_fMaxDeltaTime);
+            Drift(particles, g_iNumParticlesGas, g_fMaxDeltaTime, 0);
 
             // kick parts in current bin or smaller for half step
-            Postkick(particles, g_iNumParticlesGas, g_fMaxDeltaTime / 2.0, 0);
+            Postkick(particles, g_iNumParticlesGas, g_fMaxDeltaTime / 2.0, 0, 0);
         }
         else
         {
@@ -182,13 +182,13 @@ void RunToyStarSimulation()
                 CalculateGasAcceleration(particles, g_iNumParticlesGas, octree, current_bin);
 
                 // kick last velocity in current bin or smaller for whole step (and save this velocity as v_last)
-                Prekick(particles, g_iNumParticlesGas, fSubStep, current_bin);
+                Prekick(particles, g_iNumParticlesGas, fSubStep, current_bin, 0);
 
                 // drift all parts for whole step
-                Drift(particles, g_iNumParticlesGas, fSubStep);
+                Drift(particles, g_iNumParticlesGas, fSubStep, 0);
 
                 // kick parts in current bin or smaller for half step
-                Postkick(particles, g_iNumParticlesGas, fSubStep / 2.0, current_bin);
+                Postkick(particles, g_iNumParticlesGas, fSubStep / 2.0, current_bin, 0);
 
                 // if possible, move parts to different bin
                 UpdateBins(particles, g_iNumParticlesGas, current_bin);

@@ -55,11 +55,15 @@ def generate_fits_singlestep(data, filename, dim):
     
     print("Exported " + filename)
 
-def generate_pointcloud_xyz(data, directory):
+def generate_pointcloud_xyz(data, directory, clear_folder, start_index=0):
     Path(directory).mkdir(parents=True, exist_ok=True)
     
+    if clear_folder == True:
+        for f in os.listdir(directory):
+            os.remove(os.path.join(directory, f))
+    
     for i in range(data.shape[0]):
-        filename = directory + '{:04d}'.format(i) + '.xyz'
+        filename = directory + '{:06d}'.format(start_index + i) + '.xyz'
         with open(filename, 'w') as f:
             for j in range(int(data.shape[1] / 3)):
                 # write x,y,z as x,z,y (since y is up in TouchDesigner)
@@ -67,11 +71,15 @@ def generate_pointcloud_xyz(data, directory):
                 
     print("Exported pointcloud to " + directory)
     
-def generate_pointcloud_xyzw(data, directory):
+def generate_pointcloud_xyzw(data, directory, clear_folder, start_index=0):
     Path(directory).mkdir(parents=True, exist_ok=True)
     
+    if clear_folder == True:
+        for f in os.listdir(directory):
+            os.remove(os.path.join(directory, f))
+    
     for i in range(data.shape[0]):
-        filename = directory + '{:04d}'.format(i) + '.xyz'
+        filename = directory + '{:06d}'.format(start_index + i) + '.xyz'
         with open(filename, 'w') as f:
             for j in range(int(data.shape[1] / 4)):
                 # write x,y,z as x,z,y (since y is up in TouchDesigner)
@@ -82,6 +90,40 @@ def generate_pointcloud_xyzw(data, directory):
 def data_exists(filename):
     return os.path.isfile(filename) and os.stat(filename).st_size > 0
 
+def file_len(filename):
+    with open(filename) as f:
+        for i, l in enumerate(f):
+            pass
+    return i + 1
+
+def generate_position_file_parts(filename, num_parts, fits_directory, xyz_directory, clear_folder=True):
+    Path(fits_directory).mkdir(parents=True, exist_ok=True)
+    
+    if clear_folder == True:
+        for f in os.listdir(fits_directory):
+            os.remove(os.path.join(fits_directory, f))
+            
+    if clear_folder == True:
+        for f in os.listdir(xyz_directory):
+            os.remove(os.path.join(xyz_directory, f))
+    
+    num_steps = file_len(filename)
+    steps_per_part = int(num_steps / num_parts)
+    generated_steps = 0
+    if num_parts > 1:
+        for i in range(num_parts - 1):
+            data = np.genfromtxt(filename, float, delimiter=',', skip_header=generated_steps, max_rows=steps_per_part)
+            generate_fits(data, fits_directory + '{:06d}'.format(generated_steps) + '.fits', 4)
+            generate_pointcloud_xyzw(data, xyz_directory, False, generated_steps)
+            generated_steps += steps_per_part
+            print('[' + str(i + 1) + "/" + str(num_parts) + ']')
+        
+    data = np.genfromtxt(filename, float, delimiter=',', skip_header=generated_steps) # read any remaining steps
+    generate_fits(data, fits_directory + '{:06d}'.format(generated_steps) + '.fits', 4)
+    generate_pointcloud_xyzw(data, xyz_directory, False, generated_steps)
+    print('[' + str(num_parts) + "/" + str(num_parts) + ']')
+    print('Finished parsing positions')
+
 def main():
     
     output_dir = '../output/'
@@ -89,15 +131,13 @@ def main():
     # position
     filename = 'DarkMatter_position'
     if data_exists(output_dir + filename + '.np'):
-        data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
-        generate_fits(data, output_dir + filename + '.fits', 4)
-        generate_pointcloud_xyzw(data, output_dir + 'pointcloudDM/')
+        generate_position_file_parts(output_dir + filename + '.np', 10, output_dir + 'positions_fits/', output_dir + 'pointcloudDM/', True)
     
     filename = 'Gas_position'
     if data_exists(output_dir + filename + '.np'):
         data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
         generate_fits(data, output_dir + filename + '.fits', 4)
-        generate_pointcloud_xyzw(data, output_dir + 'pointcloudGas/')
+        generate_pointcloud_xyzw(data, output_dir + 'pointcloudGas/', True)
     
     # final position
     filename = 'DarkMatter_position_final'

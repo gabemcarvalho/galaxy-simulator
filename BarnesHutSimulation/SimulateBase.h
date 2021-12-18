@@ -51,13 +51,13 @@ void RunBaseSimulation()
         tGas.join();
 
         // gravity get updated by itself
-        tDark = std::thread(CalculateGravityAccelerationDouble, particlesDark, g_iNumParticlesDark, octreeDark, octreeGas, 0);
-        tGas = std::thread(CalculateGravityAccelerationDouble, particlesGas, g_iNumParticlesGas, octreeDark, octreeGas, 0);
+        tDark = std::thread(CalculateGravityAccelerationDouble, particlesDark, g_iNumParticlesDark, octreeDark, octreeGas, 0, 0);
+        tGas = std::thread(CalculateGravityAccelerationDouble, particlesGas, g_iNumParticlesGas, octreeDark, octreeGas, 0, 0);
 
         tDark.join(); // gravity
         tGas.join(); // gravity
 
-        Prekick(particlesDark, g_iNumParticlesDark, g_fMaxDeltaTime, 0);
+        Prekick(particlesDark, g_iNumParticlesDark, g_fMaxDeltaTime, 0, 0);
 
         POS_TYPE fStepTime = 0;
         int smallest_bin = GetSmallestBin(particlesGas, g_iNumParticlesGas);
@@ -76,20 +76,20 @@ void RunBaseSimulation()
             // calculate acceleration in current bin or smaller
             CalculateDensityEstimate(particlesGas, octreeGas, g_iNumParticlesGas, current_bin);
             CalculateGasAcceleration(particlesGas, g_iNumParticlesGas, octreeGas, current_bin);
-            // CalculateGravityAccelerationDouble(particlesGas, g_iNumParticlesGas, octreeDark, octreeGasSub, current_bin);
+            // CalculateGravityAccelerationDouble(particlesGas, g_iNumParticlesGas, octreeDark, octreeGasSub, current_bin, 0);
 
             //octreeGasSub->Delete();
             //delete octreeGasSub;
 
             // kick last velocity in current bin or smaller for whole step (and save this velocity as v_last)
-            Prekick(particlesGas, g_iNumParticlesGas, fSubStep, current_bin);
+            Prekick(particlesGas, g_iNumParticlesGas, fSubStep, current_bin, 0);
 
             // drift all parts for whole step
-            Drift(particlesDark, g_iNumParticlesDark, fSubStep);
-            Drift(particlesGas, g_iNumParticlesGas, fSubStep);
+            Drift(particlesDark, g_iNumParticlesDark, fSubStep, 0);
+            Drift(particlesGas, g_iNumParticlesGas, fSubStep, 0);
 
             // kick parts in current bin or smaller for half step
-            Postkick(particlesGas, g_iNumParticlesGas, fSubStep / 2.0, current_bin);
+            Postkick(particlesGas, g_iNumParticlesGas, fSubStep / 2.0, current_bin, 0);
 
             // if possible, move parts to different bin
             UpdateBins(particlesGas, g_iNumParticlesGas, current_bin);
@@ -111,7 +111,7 @@ void RunBaseSimulation()
             }
         }
 
-        Postkick(particlesDark, g_iNumParticlesDark, g_fMaxDeltaTime / 2.0, 0);
+        Postkick(particlesDark, g_iNumParticlesDark, g_fMaxDeltaTime / 2.0, 0, 0);
 
         // this should be done in the density loop
         std::thread tHUpdate(UpdateSmoothingLength, particlesGas, g_iNumParticlesGas);
