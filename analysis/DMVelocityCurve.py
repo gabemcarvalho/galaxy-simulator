@@ -8,16 +8,12 @@ from statistics import mean
 #fits_image_filename = fits.util.get_testdata_filepath()
 def initializePosition():
     hdulist = fits.open('474final\Data\DarkMatter_position_final.fits')
-    hdulist.info()
-
     Positionarray = np.array(hdulist[0].data)
     hdulist.close()
     return Positionarray
 
 def initializeVelocity():
     vdulist = fits.open('474final\Data\DarkMatter_velocity.fits')
-    vdulist.info()
-
     Velocityarray = np.array(vdulist[0].data)
     vdulist.close()
     return Velocityarray  
@@ -43,7 +39,6 @@ Positionarray = initializePosition()
 xmean = mean(Positionarray[:,0].tolist())
 ymean = mean(Positionarray[:,1].tolist())
 zmean = mean(Positionarray[:,2].tolist())
-print(xmean,ymean,zmean)
 smoothing = Positionarray[:,3].tolist()
 
 rlist = []
