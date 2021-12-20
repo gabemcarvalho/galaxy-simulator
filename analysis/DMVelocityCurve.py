@@ -30,11 +30,8 @@ def averaging(array):
         for j in range(len(array[:,0])):
             if array[j,0] <= i and array[j,0] >= i-0.1:
                 ylist.append(array[j,1])
-        print(sum(ylist))
-        print(len(ylist))
         
         if len(ylist) > 0:
-            print(sum(ylist)/len(ylist))
             average.append(sum(ylist)/len(ylist))
             xlist.append(i)
         ylist = []
@@ -51,6 +48,7 @@ smoothing = Positionarray[:,3].tolist()
 
 rlist = []
 circvlist = []
+dispvlist = []
 for i in range(len(Positionarray[:,0])):
     x = Positionarray[i,0]
     y = Positionarray[i,1]
@@ -60,15 +58,18 @@ for i in range(len(Positionarray[:,0])):
     yv = Velocityarray[i,1]
     zv = Velocityarray[i,2]
 
+    dispersionvels = xv**2+yv**2+zv**2
+    dispvlist.append(dispersionvels)
     r = math.sqrt(x**2+y**2+z**2)
     circv = (xv*y - x*yv)/(x**2+y**2)
     rlist.append(r)
     circvlist.append(abs(circv))
 
+sigmadisp = sum(dispvlist)
+totdispersion = math.sqrt(sigmadisp/(3*len(Positionarray[:,0])))
+print("The total velocity dispersion is ", totdispersion)
 rotationarray = np.array(list(zip(rlist, circvlist)))
 sortedarray = rotationarray[rotationarray[:, 0].argsort()]
-print(sortedarray)
-print(sortedarray[:,0])
 avgr, avgy = averaging(sortedarray)
 
 plt.scatter(sortedarray[:,0], sortedarray[:,1], s=2, c= 'k', alpha = 0.2)
