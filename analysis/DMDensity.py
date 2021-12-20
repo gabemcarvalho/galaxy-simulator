@@ -4,14 +4,18 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import scipy as sp
+import os
 
 
-def initializePosition():
-    hdulist = fits.open('474final\Data\DarkMatter_position_final.fits')
-    hdulist.info()
-
-    Positionarray = np.array(hdulist[0].data)
-    hdulist.close()
+def initializePosition(file,extension):
+    if extension == '.fits':
+        hdulist = fits.open(file)
+        print("Reading fits file:", file)
+        Positionarray = np.array(hdulist[0].data)
+        hdulist.close()
+    else:
+        print("Reading file:", file)
+        Positionarray = np.genfromtxt(file, delimiter=',')
     return Positionarray
 
 def gausskernel(r,h):
@@ -57,7 +61,9 @@ R = 0.75
 n = 1
 a = 1
 
-Positionarray = initializePosition()
+file = '474final\Data\DarkMatter_position_final.fits'
+name, extension = os.path.splitext(file)
+Positionarray = initializePosition(file,extension)
 
 rlist = []
 dlist = []
@@ -77,7 +83,7 @@ for i in np.arange(0,5,0.01):
 
 plt.scatter(rlist, dlist, s=2, c= 'k')
 plt.plot(jlist,validlist, c = 'r')
-plt.title("Density Graph")
-plt.xlabel("R")
+plt.title("Galaxy Surface Density")
+plt.xlabel("r")
 plt.ylabel("Density")
-plt.savefig("DMDensity.png")
+plt.savefig("GalaxySurfaceDensity.png")

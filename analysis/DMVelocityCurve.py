@@ -22,20 +22,39 @@ def initializeVelocity():
     vdulist.close()
     return Velocityarray  
 
+def averaging(array):
+    xlist = []
+    average = []
+    for i in np.arange(0,10,0.1):
+        ylist = []
+        for j in range(len(array[:,0])):
+            if array[j,0] <= i and array[j,0] >= i-0.1:
+                ylist.append(array[j,1])
+        print(sum(ylist))
+        print(len(ylist))
+        
+        if len(ylist) > 0:
+            print(sum(ylist)/len(ylist))
+            average.append(sum(ylist)/len(ylist))
+            xlist.append(i)
+        ylist = []
+    return xlist, average
+
 Velocityarray = initializeVelocity()
 Positionarray = initializePosition()
 
 xmean = mean(Positionarray[:,0].tolist())
 ymean = mean(Positionarray[:,1].tolist())
 zmean = mean(Positionarray[:,2].tolist())
+print(xmean,ymean,zmean)
 smoothing = Positionarray[:,3].tolist()
 
 rlist = []
 circvlist = []
 for i in range(len(Positionarray[:,0])):
-    x = Positionarray[i,0] - xmean
-    y = Positionarray[i,1] - ymean
-    z = Positionarray[i,2] - zmean
+    x = Positionarray[i,0]
+    y = Positionarray[i,1]
+    z = Positionarray[i,2]
 
     xv = Velocityarray[i,0]
     yv = Velocityarray[i,1]
@@ -46,11 +65,17 @@ for i in range(len(Positionarray[:,0])):
     rlist.append(r)
     circvlist.append(abs(circv))
 
+rotationarray = np.array(list(zip(rlist, circvlist)))
+sortedarray = rotationarray[rotationarray[:, 0].argsort()]
+print(sortedarray)
+print(sortedarray[:,0])
+avgr, avgy = averaging(sortedarray)
 
-plt.scatter(rlist, circvlist, s=2, c= 'k')
+plt.scatter(sortedarray[:,0], sortedarray[:,1], s=2, c= 'k', alpha = 0.2)
+plt.plot(avgr, avgy, c= 'r')
 plt.title("Rotation Curve of Dark Matter")
 plt.xlabel("R in kpc")
-plt.xlim(0, 3)
-plt.ylim(0,20)
+plt.xlim(0,10)
+plt.ylim(0,2)
 plt.ylabel("Circular Velocity (kpc/Gyr)")
 plt.savefig("DarkMatterRotationCurve.png")
