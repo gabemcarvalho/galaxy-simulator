@@ -4,15 +4,21 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import scipy as sp
+import os
 
 
-def initializePosition():
-    hdulist = fits.open('474final\Data\Galaxy_position_final.fits')
-    hdulist.info()
+def initializePosition(file,extension):
+    if extension == '.fits':
+        hdulist = fits.open(file)
+        print("Reading fits file:", file)
+        Positionarray = np.array(hdulist[0].data)
+        hdulist.close()
+    else:
+        print("Reading file:", file)
+        Positionarray = np.genfromtxt(file, delimiter=',')
 
-    Positionarray = np.array(hdulist[0].data)
-    hdulist.close()
     return Positionarray
+
 
 def gausskernel(r,h):
     return (h * math.sqrt(math.pi))**-3 * math.exp(-r * r / (h * h))
@@ -50,14 +56,16 @@ def density(x0, y0, z0, h, M, positions):
   return rho
 
 m = 2/1000
-h = 0.1
+h = 0.125
 y = 0
 z = 0
 M = 2
 R = 0.75
 n = 1
 
-Positionarray = initializePosition()
+file = '474final\Data\Gas_position_final.fits'
+name, extension = os.path.splitext(file)
+Positionarray = initializePosition(file,extension)
 
 rlist = []
 dlist = []
@@ -78,7 +86,8 @@ for i in np.arange(0,1,0.01):
 
 plt.scatter(rlist, dlist, s=2, c= 'k')
 plt.plot(jlist,validlist, c = 'r')
-plt.title("Density Graph")
-plt.xlabel("R")
+plt.title("Density")
+plt.ylim(0,3)
+plt.xlabel("r")
 plt.ylabel("Density")
 plt.savefig("GasDensity.png")
