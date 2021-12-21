@@ -4,6 +4,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from statistics import mean
+from scipy.signal import savgol_filter
 
 #fits_image_filename = fits.util.get_testdata_filepath()
 def initializePosition():
@@ -33,20 +34,9 @@ def averaging(circv):
         ylist = []
     return xlist, average
 
-def rollingaverage(xlist,average):
-    rllavg = []
-    for i in range(len(average)):
-        if i < 5:
-            rllavg.append(average[i])
-        elif i < len(average) - 5:
-            rollavg = (average[i-5]+ average[i-4] + average[i-3] + average[i-2] + average[i-1] + 
-            average[i] + average[i+1] + average[i+2] + average[i+3]+ average[i+4]+ average[i+5])/11
-            rllavg.append(rollavg)
-        else:
-            rllavg.append(average[i])
-
-    return xlist, rllavg
-
+def rollingaverage(average):
+    y = savgol_filter(average,19,3)
+    return  y
 
 Velocityarray = initializeVelocity()
 Positionarray = initializePosition()
@@ -82,7 +72,7 @@ print("The total velocity dispersion is ", totdispersion)
 rotationarray = np.array(list(zip(rlist, circvlist)))
 sortedarray = rotationarray[rotationarray[:, 0].argsort()]
 avgr, avgy = averaging(sortedarray)
-avgr, avgy = rollingaverage(avgr, avgy)
+avgy = rollingaverage(avgy)
 
 plt.scatter(sortedarray[:,0], sortedarray[:,1], s=2, c= 'k', alpha = 0.1)
 plt.plot(avgr, avgy, c= 'r')
