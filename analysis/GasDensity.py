@@ -5,18 +5,19 @@ import math
 import matplotlib.pyplot as plt
 import scipy as sp
 import os
-
+from random import seed, uniform
+from random import random
 
 def initializePosition(file,extension):
     if extension == '.fits':
         hdulist = fits.open(file)
         print("Reading fits file:", file)
         Positionarray = np.array(hdulist[0].data)
+        print(Positionarray.shape)
         hdulist.close()
     else:
         print("Reading file:", file)
         Positionarray = np.genfromtxt(file, delimiter=',')
-
     return Positionarray
 
 
@@ -55,6 +56,28 @@ def density(x0, y0, z0, h, M, positions):
     rho += m * gausskernel(r, h)
   return rho
 
+def densityerrorcheck(R,h,M,Positionarray):
+    
+    errorlist = []
+
+    for i in np.arange(0,100):
+        r = uniform(0,R)
+        theta = uniform(0,2*math.pi)
+        phi = uniform(0,math.pi)
+        x = r*math.sin(phi)*math.cos(theta)
+        y = r*math.sin(phi)*math.sin(theta)
+        z = r*math.cos(phi)
+        d = density(x,y,z,h,M,Positionarray)
+        r = math.sqrt(x**2+y**2+z**2)
+
+        valid = (M*math.pi**(-3/2)/(R**3))*(sp.special.gamma(5/2+n)/sp.special.gamma(1+n))*(1-(r**2/(R**2)))**n
+
+        errorlist.append((d-valid)**2)
+
+    errornum = len(errorlist)
+    error = sum(errorlist)/errornum
+    return error, errornum
+
 m = 2/1000
 h = 0.125
 y = 0
@@ -72,17 +95,23 @@ dlist = []
 validlist = []
 jlist = []
 
+
 for i in np.arange(0,1,0.01):
     dx = density(i,0,0, h, M, Positionarray)
     dy = density(0,i,0, h, M, Positionarray)
     dz = density(0,0,i, h, M, Positionarray)
-
+    d = (dx+dy+dz)/3
     valid = (M*math.pi**(-3/2)/(R**3))*(sp.special.gamma(5/2+n)/sp.special.gamma(1+n))*(1-(i**2/(R**2)))**n
     if valid >= 0:
         jlist.append(i)
         validlist.append(valid)
     rlist.append(i)
-    dlist.append((dx+dy+dz)/3)
+    dlist.append(d)
+
+error,errornum = densityerrorcheck(R,h,M,Positionarray)
+
+print("The error between the theoretical density", error)
+print("The amount of points tested for error", errornum)
 
 plt.scatter(rlist, dlist, s=2, c= 'k')
 plt.plot(jlist,validlist, c = 'r')
