@@ -27,20 +27,33 @@ void CalculateHaloAcceleration(Particle3D** aParticles, int iNumParticles, int i
     }
 }
 
-void CalculateCentralMassAcceleration(Particle3D** aParticles, int iNumParticles, int iTimeStep, int iStartIndex)
+void CalculateNFWAcceleration(Particle3D** aParticles, int iNumParticles, int iStartIndex)
+{
+    POS_TYPE fRs = g_fNFW_Rs;
+    POS_TYPE fRho0 = g_fNFW_Rho0;
+
+    for (int i = 0; i < iNumParticles; i++)
+    {
+        Particle3D* particle = aParticles[iStartIndex + i];
+        POS_TYPE fR = std::sqrt(particle->position.lengthSquared());
+        particle->acceleration_grav += particle->position * (4.0 * PI * g_fGravitationConst * fRs * fRs * fRs * fRho0 * (fR - (fR + fRs) * std::log(fR / fRs + 1.0))) / (fR * fR * fR * (fR + fRs));
+    }
+}
+
+void CalculateCentralMassAcceleration(Particle3D** aParticles, int iNumParticles, int iTimeStep, int iStartIndex, POS_TYPE fParticleMass, POS_TYPE fTotalMass)
 {
     POS_TYPE fTime = g_fMaxDeltaTime * static_cast<POS_TYPE>(iTimeStep);
-    POS_TYPE fCentralMass = g_fDarkParticleMass;
+    POS_TYPE fCentralMass = fParticleMass;
     if (fTime > 80.0)
     {
-        fCentralMass = g_fTotalDarkMass * 0.014;
+        fCentralMass += fTotalMass * 0.014;
     }
     else if (fTime > 24.0)
     {
-        fCentralMass = g_fDarkParticleMass + (fTime - 24.0) * 2.5e-4L;
+        fCentralMass += fTotalMass * (fTime - 24.0) * 2.5e-4L;
     }
 
-    fCentralMass = g_fTotalDarkMass * 0.14;// *0.014;
+     // fCentralMass = fTotalMass * 0.014; // *0.014;
 
     const POS_TYPE fR0 = 0.05;
 
@@ -51,7 +64,7 @@ void CalculateCentralMassAcceleration(Particle3D** aParticles, int iNumParticles
     }
 }
 
-void SetCircularVelocitiesUsingAcceleration(Particle3D** aParticles, int iNumParticles)
+void SetCircularVelocitiesUsingAcceleration(Particle3D** aParticles, int iNumParticles, POS_TYPE fParticleMass, POS_TYPE fTotalMass)
 {
     if (iNumParticles == 0)
     {
@@ -64,8 +77,15 @@ void SetCircularVelocitiesUsingAcceleration(Particle3D** aParticles, int iNumPar
 
     ConstructOctree(octree, aParticles, iNumParticles);
 
+    for (int i = 0; i < iNumParticles; i++)
+    {
+        Particle3D* particle = aParticles[i];
+        particle->acceleration_grav *= 0;
+    }
+
     CalculateGravityAcceleration(aParticles, iNumParticles, octree, 0, 0);
-    CalculateCentralMassAcceleration(aParticles, iNumParticles, 0, 0);
+    CalculateCentralMassAcceleration(aParticles, iNumParticles, 0, 0, fParticleMass, fTotalMass);
+    //CalculateNFWAcceleration(aParticles, iNumParticles, 0);
     CalculateHaloAcceleration(aParticles, iNumParticles, 0);
     
     octree->Delete();
@@ -81,7 +101,7 @@ void SetCircularVelocitiesUsingAcceleration(Particle3D** aParticles, int iNumPar
 
         POS_TYPE fR = std::sqrt(particle->position.lengthSquared());
         Vector3 vInRadialDirection = particle->position * (-1.0) / fR;
-        POS_TYPE fRadialAcceleration = particle->acceleration_grav.dot(vInRadialDirection);
+        POS_TYPE fRadialAcceleration = std::max(particle->acceleration_grav.dot(vInRadialDirection), 0.0);
         POS_TYPE fCircularVelocity = std::sqrt(fR * fRadialAcceleration);
         
         // fCircularVelocity = std::sqrt((1.0 - 1.0 / std::sqrt(1.0 + fR * fR)) / fR); // analytic solution for density distribution
@@ -105,6 +125,8 @@ void SetCircularVelocitiesUsingAcceleration(Particle3D** aParticles, int iNumPar
         POS_TYPE fRadialVelocity = fRadialDispersion * radialVelocityDispersion(generator);
         particle->velocity[0] += fRadialVelocity * std::cos(fTheta);
         particle->velocity[1] += fRadialVelocity * std::sin(fTheta);
+
+        fCircularVelocity /= (fCircularVelocity + std::abs(fRadialVelocity)) / fCircularVelocity; // this makes the disk look slightly more stable
 
         // convert to circular direction
         fTheta += PI / 2.0;
@@ -178,7 +200,8 @@ void ValidateParticles(Particle3D** aParticles, int iNumParticles)
         ConstructOctree(octree, aParticles, iNumParticles);
 
         CalculateGravityAcceleration(aParticles, iNumParticles, octree, 0, 0);
-        CalculateCentralMassAcceleration(aParticles, iNumParticles, 0, 0);
+        CalculateCentralMassAcceleration(aParticles, iNumParticles, 0, 0, g_fDarkParticleMass, g_fTotalDarkMass);
+        //CalculateNFWAcceleration(aParticles, iNumParticles, 0);
         CalculateHaloAcceleration(aParticles, iNumParticles, 0);
 
         octree->Delete();
@@ -200,12 +223,19 @@ void ValidateParticles(Particle3D** aParticles, int iNumParticles)
 void ComputeSellwoodLeapfrogStep(Particle3D** aParticles, int iNumParticles, int iStartIndex, OctreeNode* octree, int iStep)
 {
     // acceleration
+    for (int i = 0; i < iNumParticles; i++)
+    {
+        Particle3D* particle = aParticles[iStartIndex + i];
+        particle->acceleration_grav *= 0;
+    }
+    
     CalculateGravityAcceleration(aParticles, iNumParticles, octree, 0, iStartIndex);
-    CalculateCentralMassAcceleration(aParticles, iNumParticles, iStep, iStartIndex);
-    CalculateHaloAcceleration(aParticles, iNumParticles, iStartIndex);
+    CalculateCentralMassAcceleration(aParticles, iNumParticles, iStep, iStartIndex, g_fDarkParticleMass, g_fTotalDarkMass);
+    //CalculateNFWAcceleration(aParticles, iNumParticles, iStartIndex);
+    CalculateHaloAcceleration(aParticles, iNumParticles, 0);
 
     // set velocities of accreted particles after acceleration has been calculated
-    if (iStep >= g_iAccretionStartStep && iStep % g_iStepsBetweenAccretion == 0)
+    if (iStep + 1 >= g_iAccretionStartStep && iStep + 1 < std::min(g_iNumSteps, g_iAccretionEndStep) && (iStep + 1 - g_iAccretionStartStep) % g_iStepsBetweenAccretion == 0)
     {
         for (int i = 0; i < g_iParticlesAddedPerStep; i++)
         {
@@ -222,7 +252,13 @@ void ComputeSellwoodLeapfrogStep(Particle3D** aParticles, int iNumParticles, int
 void RunSellwoodGalaxySimulation()
 {
     // Particles get accreted over time
-    int iTotalNumParticles = g_iNumParticlesDark + std::max(g_iNumSteps - g_iAccretionStartStep, 0) / g_iStepsBetweenAccretion * g_iParticlesAddedPerStep;
+    int iLastAccretionStep = std::min(g_iNumSteps, g_iAccretionEndStep);
+    int iTotalNumParticles = g_iNumParticlesDark;
+    if (iLastAccretionStep >= g_iAccretionStartStep && g_iAccretionStartStep < g_iNumSteps)
+    {
+        int iNumAccretionSteps = std::max(iLastAccretionStep - g_iAccretionStartStep, 0) / g_iStepsBetweenAccretion + 1;
+        iTotalNumParticles += g_iParticlesAddedPerStep * iNumAccretionSteps;
+    }
     int iNumActiveParticles = g_iNumParticlesDark;
 
     if (iTotalNumParticles == 0)
@@ -241,7 +277,7 @@ void RunSellwoodGalaxySimulation()
         particlesDark[i]->bActive = false;
     }
 
-    SetCircularVelocitiesUsingAcceleration(particlesDark, g_iNumParticlesDark);
+    SetCircularVelocitiesUsingAcceleration(particlesDark, g_iNumParticlesDark, g_fDarkParticleMass, g_fTotalDarkMass);
 
     std::ofstream outDark(g_sPosFilenameDark, std::ofstream::out);
     WriteStepPositions(&outDark, particlesDark, iTotalNumParticles, false, true);
@@ -251,7 +287,7 @@ void RunSellwoodGalaxySimulation()
     for (int step = 0; step < g_iNumSteps; step++)
     {
         // activate accreted particles
-        if (step >= g_iAccretionStartStep && step % g_iStepsBetweenAccretion == 0)
+        if (step + 1 >= g_iAccretionStartStep && step + 1 < iLastAccretionStep && (step + 1 - g_iAccretionStartStep) % g_iStepsBetweenAccretion == 0)
         {
             iNumActiveParticles += g_iParticlesAddedPerStep;
             
@@ -286,7 +322,7 @@ void RunSellwoodGalaxySimulation()
         octreeDark->Delete();
         delete octreeDark;
 
-        // ValidateParticles(particlesDark, iNumActiveParticles);
+        // ValidateParticles(particlesDark, iNumActiveParticles); // this shouldn't be necessary
 
         // write data
         WriteStepPositions(&outDark, particlesDark, iTotalNumParticles, false, true);
@@ -307,10 +343,7 @@ void RunSellwoodGalaxySimulation()
     if (g_bWriteVelocity)
     {
         std::ofstream outDarkVel(g_sVelFilenameDark, std::ofstream::out);
-
-        std::thread tWriteDarkVel(WriteStepVelocities, &outDarkVel, particlesDark, iTotalNumParticles);
-        tWriteDarkVel.join();
-
+        WriteStepVelocities(&outDarkVel, particlesDark, iTotalNumParticles);
         outDarkVel.close();
     }
 

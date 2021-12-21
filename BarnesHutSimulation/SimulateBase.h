@@ -21,6 +21,7 @@ void RunBaseSimulation()
 
     Particle3D** particlesGas = g_iNumParticlesGas ? new Particle3D * [g_iNumParticlesGas] : 0;
     GenerateDistributionUniformSphere(particlesGas, g_iNumParticlesGas, g_fGasParticleMass, g_fCloudRadius, g_fMaxStartSpeed, g_fInitialH);
+    InitializeNeighbourArrays(particlesGas, g_iNumParticlesGas, g_iMaxNumNeighbours);
 
     std::ofstream outDark(g_sPosFilenameDark, std::ofstream::out);
     std::ofstream outGas(g_sPosFilenameGas, std::ofstream::out);
@@ -74,8 +75,8 @@ void RunBaseSimulation()
             */
 
             // calculate acceleration in current bin or smaller
-            CalculateDensityEstimate(particlesGas, octreeGas, g_iNumParticlesGas, current_bin);
-            CalculateGasAcceleration(particlesGas, g_iNumParticlesGas, octreeGas, current_bin);
+            CalculateDensityEstimate(particlesGas, octreeGas, g_iNumParticlesGas, current_bin, 0);
+            CalculateGasAcceleration(particlesGas, g_iNumParticlesGas, octreeGas, current_bin, 0);
             // CalculateGravityAccelerationDouble(particlesGas, g_iNumParticlesGas, octreeDark, octreeGasSub, current_bin, 0);
 
             //octreeGasSub->Delete();
@@ -92,7 +93,7 @@ void RunBaseSimulation()
             Postkick(particlesGas, g_iNumParticlesGas, fSubStep / 2.0, current_bin, 0);
 
             // if possible, move parts to different bin
-            UpdateBins(particlesGas, g_iNumParticlesGas, current_bin);
+            UpdateBins(particlesGas, g_iNumParticlesGas, current_bin, 0);
 
             // calculate the next bin
             fStepTime += 1.0 / std::pow(2.0, smallest_bin);
@@ -187,6 +188,7 @@ void RunBaseSimulation()
     }
     delete[] particlesDark;
 
+    DeleteNeighbourArrays(particlesGas, g_iNumParticlesGas);
     for (int i = 0; i < g_iNumParticlesGas; i++)
     {
         delete particlesGas[i];

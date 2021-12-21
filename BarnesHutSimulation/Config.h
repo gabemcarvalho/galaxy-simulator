@@ -200,6 +200,11 @@ void LoadConfig(const char* sFilename)
 			g_iNeighbourTolerance = std::atoi(value.c_str());
 			std::cout << "Neighbour Tolerance: " << g_iNeighbourTolerance << std::endl;
 		}
+		else if (key.compare("MaxNumNeighbours") == 0)
+		{
+			g_iMaxNumNeighbours = std::atoi(value.c_str());
+			std::cout << "Max Num Neighbours: " << g_iMaxNumNeighbours << std::endl;
+		}
 		else if (key.compare("RandomSeed") == 0)
 		{
 			g_iSeed = std::atoi(value.c_str());
@@ -272,6 +277,11 @@ void LoadConfig(const char* sFilename)
 			g_iParticlesAddedPerStep = std::atoi(value.c_str());
 			std::cout << "Particles Added Per Step: " << g_iParticlesAddedPerStep << std::endl;
 		}
+		else if (key.compare("AccretionEndStep") == 0)
+		{
+			g_iAccretionEndStep = std::atoi(value.c_str());
+			std::cout << "Accretion End Step: " << g_iAccretionEndStep << std::endl;
+		}
 		else if (key.compare("AccretionMinRadius") == 0)
 		{
 			g_fAccretionMinRadius = std::atof(value.c_str());
@@ -282,7 +292,23 @@ void LoadConfig(const char* sFilename)
 			g_fAccretionMaxRadius = std::atof(value.c_str());
 			std::cout << "Accretion Max Radius: " << g_fAccretionMaxRadius << std::endl;
 		}
-
+		else if (key.compare("NFW_Rs") == 0)
+		{
+			g_fNFW_Rs = std::atof(value.c_str());
+			std::cout << "NFW Rs: " << g_fNFW_Rs << std::endl;
+		}
+		else if (key.compare("NFW_Rho0") == 0)
+		{
+			g_fNFW_Rho0 = std::atof(value.c_str());
+			std::cout << "NFW Rho0: " << g_fNFW_Rho0 << std::endl;
+		}
+		// Sellwood Galaxy
+		else if (key.compare("UseSellwoodSPHModel") == 0)
+		{
+			g_bUseSellwoodSPHModel = value.compare("true") == 0;
+			std::cout << "Use Sellwood SPH Model: " << g_bUseSellwoodSPHModel << std::endl;
+		}
+		// threading
 		else if (key.compare("NumThreads") == 0)
 		{
 			g_iNumThreads = std::atoi(value.c_str());

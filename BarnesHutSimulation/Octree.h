@@ -131,7 +131,8 @@ struct OctreeNode
         return vGrav;
     }
 
-    void FindNeighbours(List<Particle3D>* pList, Particle3D* particle, POS_TYPE fSearchRadius)
+    // note: only saves up to a g_iMaxNumNeighbours, but still increments particle->num_neighbours
+    void FindNeighbours(Particle3D* particle, POS_TYPE fSearchRadius)
     {
         if (iNumParticles == 1)
         {
@@ -140,11 +141,10 @@ struct OctreeNode
                 return;
             }
 
-            pParticle->vSeparation = particle->position - pParticle->position;
-            if (pParticle->vSeparation.lengthSquared() < fSearchRadius * fSearchRadius)
+            Vector3 vSeparation = particle->position - pParticle->position;
+            if (vSeparation.lengthSquared() < fSearchRadius * fSearchRadius)
             {
-                pParticle->fSeparation = std::sqrt(pParticle->vSeparation.lengthSquared());
-                pList->AddEnd(pParticle);
+                particle->add_neighbour(pParticle);
             }
 
             return;
@@ -163,7 +163,44 @@ struct OctreeNode
         {
             if (pNodes[i] != 0)
             {
-                pNodes[i]->FindNeighbours(pList, particle, fSearchRadius);
+                pNodes[i]->FindNeighbours(particle, fSearchRadius);
+            }
+        }
+    }
+
+    // Same method as above, but with a linked list. This is slower since it can't be multithreaded
+    void FindNeighboursList(List<Particle3D>* pList, Particle3D* particle, POS_TYPE fSearchRadius)
+    {
+        if (iNumParticles == 1)
+        {
+            if (particle == pParticle) // still need to include the particle in the density calculation
+            {
+                return;
+            }
+
+            Vector3 vSeparation = particle->position - pParticle->position;
+            if (vSeparation.lengthSquared() < fSearchRadius * fSearchRadius)
+            {
+                pList->AddEnd(pParticle);
+            }
+
+            return;
+        }
+
+        // if the node volume does not intersect a cube around the particle, stop traversing down this path
+        POS_TYPE fMaxDist = fSearchRadius + fWidth;
+        if (std::abs(particle->position[0] - vPosition[0]) > fMaxDist ||
+            std::abs(particle->position[1] - vPosition[1]) > fMaxDist ||
+            std::abs(particle->position[2] - vPosition[2]) > fMaxDist)
+        {
+            return;
+        }
+
+        for (int i = 0; i < 8; i++)
+        {
+            if (pNodes[i] != 0)
+            {
+                pNodes[i]->FindNeighboursList(pList, particle, fSearchRadius);
             }
         }
     }

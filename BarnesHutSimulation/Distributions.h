@@ -28,18 +28,22 @@ void GenerateDistributionUniformCircle(Particle2D** aParticles, int iNumParticle
     }
 }
 
-void GenerateDistributionUniformDisk(Particle3D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fRadius, POS_TYPE fEdgeSpeed, POS_TYPE fH)
+void GenerateDistributionUniformDisk(Particle3D** aParticles, int iNumParticles, float fParticleMass, POS_TYPE fRadius, POS_TYPE fEdgeSpeed, POS_TYPE fH, POS_TYPE fRMSVerticalThickness)
 {
     if (iNumParticles == 0)
     {
         return;
     }
 
+    std::default_random_engine generator;
+    std::normal_distribution<double> verticalDistribution(0.0, fRMSVerticalThickness);
+
     for (int i = 0; i < iNumParticles; i++)
     {
         POS_TYPE fR = std::sqrt(frand());
         POS_TYPE fAngle = frand() * 2.0f * PI;
-        Vector3 vPos(fRadius * fR * std::cos(fAngle), fRadius * fR * std::sin(fAngle), 0.0f);
+        POS_TYPE fZ = verticalDistribution(generator);
+        Vector3 vPos(fRadius * fR * std::cos(fAngle), fRadius * fR * std::sin(fAngle), fZ);
 
         fR = fEdgeSpeed * fR;
         fAngle += PI / 2.0f;
@@ -47,6 +51,7 @@ void GenerateDistributionUniformDisk(Particle3D** aParticles, int iNumParticles,
         vVel += Vector3(frand() - 0.5f, frand() - 0.5f, 0.0f) * fEdgeSpeed * 0.2f;
 
         aParticles[i] = new Particle3D(vPos, vVel, fParticleMass, fH);
+        aParticles[i]->velocity_last = aParticles[i]->velocity;
     }
 }
 
@@ -70,6 +75,7 @@ void GenerateDistributionUniformSphere(Particle3D** aParticles, int iNumParticle
         // vVel += Vector3(frand() - 0.5f, frand() - 0.5f, 0.0f) * fEdgeSpeed * 0.2f;
 
         aParticles[i] = new Particle3D(vPos, vVel, fParticleMass, fH);
+        aParticles[i]->velocity_last = aParticles[i]->velocity;
     }
 }
 
@@ -93,6 +99,7 @@ void GenerateDistribution3DNormal(Particle3D** aParticles, int iNumParticles, fl
         Vector3 vVel(0.0, 0.0, 0.0);
 
         aParticles[i] = new Particle3D(vPos, vVel, fParticleMass, fH);
+        aParticles[i]->velocity_last = aParticles[i]->velocity;
     }
 }
 
@@ -112,6 +119,7 @@ void GenerateDistributionUniformCube(Particle3D** aParticles, int iNumParticles,
         Vector3 vVel(0.0, 0.0, 0.0);
 
         aParticles[i] = new Particle3D(vPos, vVel, fParticleMass, fH);
+        aParticles[i]->velocity_last = aParticles[i]->velocity;
     }
 }
 
@@ -140,5 +148,6 @@ void GenerateDistributionSellwoodDisk(Particle3D** aParticles, int iNumParticles
         Vector3 vVel(0.0, 0.0, 0.0); // velocity handled after initial distribution is set up
 
         aParticles[i] = new Particle3D(vPos, vVel, fParticleMass, fH);
+        aParticles[i]->velocity_last = aParticles[i]->velocity;
     }
 }

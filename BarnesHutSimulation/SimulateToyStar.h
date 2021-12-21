@@ -101,7 +101,7 @@ void CalculateDensityGaussian(Particle3D** aParticles, int iNumParticles)
     }
 }
 
-void CalculateToyStarGasAcceleration(Particle3D** aParticles, int iNumParticles, OctreeNode* octreeGas, int iBin)
+void CalculateToyStarGasAcceleration(Particle3D** aParticles, int iNumParticles, OctreeNode* octree, int iBin)
 {
     List<Particle3D> neighbourList = List<Particle3D>();
 
@@ -116,15 +116,18 @@ void CalculateToyStarGasAcceleration(Particle3D** aParticles, int iNumParticles,
 
         particle->acceleration_sph *= 0;
         
-        neighbourList.Clear();
-        octreeGas->FindNeighbours(&neighbourList, particle, 2.0f * particle->h);
+        particle->clear_neighbours();
+        octree->FindNeighbours(particle, particle->h); // didn't calculate neighbours in the gaussian density estimate, so need to find them here
 
-        for (List<Particle3D>::Iterator iter = neighbourList.GetIterator(); !iter.Done(); iter.Next())
+        int iNeighbours = std::min(particle->num_neighbours, g_iMaxNumNeighbours);
+        for (int j = 0; j < iNeighbours; j++)
         {
-            Particle3D* neighbour = iter.GetValue();
+            Particle3D* neighbour = particle->aNeighbours[j];
+            Vector3 vSeparation = particle->position - neighbour->position;
+            POS_TYPE fSeparation = std::sqrt(vSeparation.lengthSquared());
 
-            Vector3 dWdr_hi = dWdr(neighbour->vSeparation, neighbour->fSeparation, particle->h);
-            Vector3 dWdr_hj = dWdr(neighbour->vSeparation, neighbour->fSeparation, neighbour->h);
+            Vector3 dWdr_hi = dWdr(vSeparation, fSeparation, particle->h);
+            Vector3 dWdr_hj = dWdr(vSeparation, fSeparation, neighbour->h);
 
             particle->acceleration_sph -= dWdr_hi * (neighbour->mass * g_fA * std::pow(particle->density, g_fAdiabaticIndex - 2.0));
             particle->acceleration_sph -= dWdr_hj * (neighbour->mass * g_fA * std::pow(neighbour->density, g_fAdiabaticIndex - 2.0));
@@ -136,6 +139,7 @@ void RunToyStarSimulation()
 {
     Particle3D** particles = g_iNumParticlesGas ? new Particle3D * [g_iNumParticlesGas] : 0;
     GenerateDistribution3DNormal(particles, g_iNumParticlesGas, g_fGasParticleMass, g_fInitialH);
+    InitializeNeighbourArrays(particles, g_iNumParticlesGas, g_iMaxNumNeighbours);
 
     std::ofstream outGas(g_sPosFilenameGas, std::ofstream::out);
     WriteStepPositions(&outGas, particles, g_iNumParticlesGas, true);
@@ -178,8 +182,8 @@ void RunToyStarSimulation()
 
                 // calculate acceleration in current bin or smaller
                 CalculateToyStarGravity(particles, g_iNumParticlesGas, current_bin);
-                CalculateDensityEstimate(particles, octree, g_iNumParticlesGas, current_bin);
-                CalculateGasAcceleration(particles, g_iNumParticlesGas, octree, current_bin);
+                CalculateDensityEstimate(particles, octree, g_iNumParticlesGas, current_bin, 0);
+                CalculateGasAcceleration(particles, g_iNumParticlesGas, octree, current_bin, 0);
 
                 // kick last velocity in current bin or smaller for whole step (and save this velocity as v_last)
                 Prekick(particles, g_iNumParticlesGas, fSubStep, current_bin, 0);
@@ -191,7 +195,7 @@ void RunToyStarSimulation()
                 Postkick(particles, g_iNumParticlesGas, fSubStep / 2.0, current_bin, 0);
 
                 // if possible, move parts to different bin
-                UpdateBins(particles, g_iNumParticlesGas, current_bin);
+                UpdateBins(particles, g_iNumParticlesGas, current_bin, 0);
 
                 // calculate the next bin
                 fStepTime += 1.0 / std::pow(2.0, smallest_bin);
@@ -255,6 +259,7 @@ void RunToyStarSimulation()
         outGasDensity.close();
     }
 
+    DeleteNeighbourArrays(particles, g_iNumParticlesGas);
     for (int i = 0; i < g_iNumParticlesGas; i++)
     {
         delete particles[i];

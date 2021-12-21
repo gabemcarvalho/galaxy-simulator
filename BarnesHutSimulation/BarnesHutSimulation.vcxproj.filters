@@ -62,5 +62,8 @@
     <ClInclude Include="SimulateSellwoodGalaxy.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="SimulateSellwoodSPHGalaxy.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

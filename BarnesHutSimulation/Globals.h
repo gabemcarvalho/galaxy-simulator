@@ -37,6 +37,7 @@ bool g_bUseViscosity = true;
 
 int g_iTargetNumNeighbours = 50;
 int g_iNeighbourTolerance = 5;
+int g_iMaxNumNeighbours = 100;
 
 bool g_bUseToyStarModel = false;
 bool g_bUseToyStarFluidEquation = false;
@@ -51,10 +52,16 @@ double g_fSellwoodV0 = 0.7;
 double g_fSellwoodCoreRadius = 30.0;
 
 int g_iAccretionStartStep = 50;
+int g_iAccretionEndStep = 25000;
 int g_iStepsBetweenAccretion = 4;
 int g_iParticlesAddedPerStep = 4;
 double g_fAccretionMinRadius = 8.0;
 double g_fAccretionMaxRadius = 12.0;
+
+bool g_bUseSellwoodSPHModel = false;
+
+double g_fNFW_Rs = 1.0;
+double g_fNFW_Rho0 = 1.0;
 
 int g_iNumThreads = 10;
 

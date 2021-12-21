@@ -98,6 +98,7 @@ def file_len(filename):
 
 def generate_position_file_parts(filename, num_parts, fits_directory, xyz_directory, clear_folder=True):
     Path(fits_directory).mkdir(parents=True, exist_ok=True)
+    Path(xyz_directory).mkdir(parents=True, exist_ok=True)
     
     if clear_folder == True:
         for f in os.listdir(fits_directory):
@@ -131,13 +132,11 @@ def main():
     # position
     filename = 'DarkMatter_position'
     if data_exists(output_dir + filename + '.np'):
-        generate_position_file_parts(output_dir + filename + '.np', 10, output_dir + 'positions_fits/', output_dir + 'pointcloudDM/', True)
+        generate_position_file_parts(output_dir + filename + '.np', 35, output_dir + 'positions_fits/', output_dir + 'pointcloudDM/', True)
     
     filename = 'Gas_position'
     if data_exists(output_dir + filename + '.np'):
-        data = np.loadtxt(output_dir + filename + '.np', float, delimiter=',')
-        generate_fits(data, output_dir + filename + '.fits', 4)
-        generate_pointcloud_xyzw(data, output_dir + 'pointcloudGas/', True)
+        generate_position_file_parts(output_dir + filename + '.np', 40, output_dir + 'positions_fits/', output_dir + 'pointcloudGas/', True)
     
     # final position
     filename = 'DarkMatter_position_final'
