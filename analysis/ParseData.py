@@ -132,7 +132,7 @@ def main():
     # position
     filename = 'DarkMatter_position'
     if data_exists(output_dir + filename + '.np'):
-        generate_position_file_parts(output_dir + filename + '.np', 1, output_dir + 'positions_fits/', output_dir + 'pointcloudDM/', True)
+        generate_position_file_parts(output_dir + filename + '.np', 30, output_dir + 'positions_fits/', output_dir + 'pointcloudDM/', True)
     
     filename = 'Gas_position'
     if data_exists(output_dir + filename + '.np'):
