@@ -86,8 +86,8 @@ void SetCircularVelocitiesUsingAcceleration(Particle3D** aParticles, int iNumPar
 
     CalculateGravityAcceleration(aParticles, iNumParticles, octree, 0, 0);
     CalculateCentralMassAcceleration(aParticles, iNumParticles, 0, 0, fParticleMass, fTotalMass);
-    CalculateNFWAcceleration(aParticles, iNumParticles, 0);
-    //CalculateHaloAcceleration(aParticles, iNumParticles, 0);
+    //CalculateNFWAcceleration(aParticles, iNumParticles, 0);
+    CalculateHaloAcceleration(aParticles, iNumParticles, 0);
     
     octree->Delete();
     delete octree;
@@ -202,8 +202,8 @@ void ValidateParticles(Particle3D** aParticles, int iNumParticles)
 
         CalculateGravityAcceleration(aParticles, iNumParticles, octree, 0, 0);
         CalculateCentralMassAcceleration(aParticles, iNumParticles, 0, 0, g_fDarkParticleMass, g_fTotalDarkMass);
-        CalculateNFWAcceleration(aParticles, iNumParticles, 0);
-        //CalculateHaloAcceleration(aParticles, iNumParticles, 0);
+        //CalculateNFWAcceleration(aParticles, iNumParticles, 0);
+        CalculateHaloAcceleration(aParticles, iNumParticles, 0);
 
         octree->Delete();
         delete octree;
@@ -232,8 +232,8 @@ void ComputeSellwoodLeapfrogStep(Particle3D** aParticles, int iNumParticles, int
     
     CalculateGravityAcceleration(aParticles, iNumParticles, octree, 0, iStartIndex);
     CalculateCentralMassAcceleration(aParticles, iNumParticles, iStep, iStartIndex, g_fDarkParticleMass, g_fTotalDarkMass);
-    CalculateNFWAcceleration(aParticles, iNumParticles, iStartIndex);
-    //CalculateHaloAcceleration(aParticles, iNumParticles, iStartIndex);
+    //CalculateNFWAcceleration(aParticles, iNumParticles, iStartIndex);
+    CalculateHaloAcceleration(aParticles, iNumParticles, iStartIndex);
 
     // set velocities of accreted particles after acceleration has been calculated
     if (iStep + 1 >= g_iAccretionStartStep && iStep + 1 < std::min(g_iNumSteps, g_iAccretionEndStep) && (iStep + 1 - g_iAccretionStartStep) % g_iStepsBetweenAccretion == 0)
